@@ -1,0 +1,22 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/register/register",
+      "style": {
+        "navigationBarTitleText": "注册"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "校园闲置交易",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F7F7F7"
+  }
+}
