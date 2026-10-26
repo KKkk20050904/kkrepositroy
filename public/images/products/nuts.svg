@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="每日坚果">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7e6"/>
+      <stop offset="1" stop-color="#ffe9c7"/>
+    </linearGradient>
+    <linearGradient id="jar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f9e8c7"/>
+      <stop offset="1" stop-color="#e9c590"/>
+    </linearGradient>
+    <clipPath id="jarClip">
+      <rect x="128" y="132" width="144" height="192" rx="26"/>
+    </clipPath>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#95622c" flood-opacity=".2"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="326" cy="76" r="68" fill="#ffffff" opacity=".45"/>
+  <circle cx="68" cy="328" r="54" fill="#ffffff" opacity=".28"/>
+  <ellipse cx="200" cy="337" rx="82" ry="14" fill="#95622c" opacity=".12"/>
+  <g filter="url(#shadow)">
+    <rect x="128" y="132" width="144" height="192" rx="26" fill="url(#jar)" opacity=".93"/>
+    <g clip-path="url(#jarClip)">
+      <ellipse cx="160" cy="214" rx="20" ry="13" fill="#b9783e" transform="rotate(-22 160 214)"/>
+      <ellipse cx="204" cy="198" rx="22" ry="14" fill="#d69754" transform="rotate(18 204 198)"/>
+      <ellipse cx="246" cy="218" rx="19" ry="12" fill="#a9612f" transform="rotate(-10 246 218)"/>
+      <ellipse cx="174" cy="250" rx="21" ry="13" fill="#e1ad69" transform="rotate(14 174 250)"/>
+      <ellipse cx="219" cy="248" rx="23" ry="13" fill="#b36f38" transform="rotate(-18 219 248)"/>
+      <ellipse cx="255" cy="266" rx="18" ry="12" fill="#dda25c" transform="rotate(8 255 266)"/>
+      <ellipse cx="148" cy="284" rx="20" ry="13" fill="#cf8b48" transform="rotate(-16 148 284)"/>
+      <ellipse cx="192" cy="292" rx="22" ry="14" fill="#e7b978" transform="rotate(12 192 292)"/>
+      <ellipse cx="238" cy="298" rx="20" ry="13" fill="#b4713a" transform="rotate(-8 238 298)"/>
+      <path d="M216 276c17-5 28 10 18 22-4 5-10 6-15 3-6 4-13 1-15-6-2-7 3-16 12-19Z" fill="#7e4c28"/>
+    </g>
+    <rect x="128" y="132" width="144" height="192" rx="26" fill="none" stroke="#d8b47e" stroke-width="3"/>
+    <rect x="140" y="106" width="120" height="36" rx="13" fill="#b9844e"/>
+    <rect x="148" y="114" width="104" height="8" rx="4" fill="#d3a46f"/>
+    <rect x="142" y="238" width="116" height="54" rx="10" fill="#fffaf0" opacity=".95"/>
+    <path d="M200 250c-15 0-22 13-16 22 4 6 11 8 16 3 5 5 12 3 16-3 6-9-1-22-16-22Z" fill="#6e9b58"/>
+    <path d="M200 262v13" fill="none" stroke="#4d7440" stroke-width="3" stroke-linecap="round"/>
+    <rect x="158" y="170" width="12" height="110" rx="6" fill="#ffffff" opacity=".22"/>
+  </g>
+</svg>

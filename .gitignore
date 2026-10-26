@@ -1,4 +1,4 @@
-# Logs
+﻿# Logs
 logs
 *.log
 npm-debug.log*
@@ -147,3 +147,12 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Local demo additions
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.tmp/
+.edge-profile*/
+.edge-cdp/

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="家用空气炸锅">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0f2ff"/>
+      <stop offset="1" stop-color="#dfe4fa"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3d4464"/>
+      <stop offset=".55" stop-color="#2d3350"/>
+      <stop offset="1" stop-color="#1f243a"/>
+    </linearGradient>
+    <linearGradient id="basket" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#596386"/>
+      <stop offset="1" stop-color="#404968"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#232942" flood-opacity=".24"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="326" cy="78" r="68" fill="#ffffff" opacity=".45"/>
+  <circle cx="68" cy="330" r="54" fill="#ffffff" opacity=".28"/>
+  <ellipse cx="200" cy="339" rx="100" ry="14" fill="#232942" opacity=".13"/>
+  <g filter="url(#shadow)">
+    <rect x="104" y="94" width="192" height="238" rx="40" fill="url(#body)"/>
+    <rect x="128" y="118" width="144" height="68" rx="17" fill="#454d70"/>
+    <rect x="140" y="130" width="58" height="8" rx="4" fill="#8c95b7" opacity=".55"/>
+    <circle cx="234" cy="145" r="11" fill="#1c2135"/>
+    <path d="M229 145h10M234 140v10" fill="none" stroke="#7ee0c5" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="139" y="158" width="44" height="5" rx="2.5" fill="#7ee0c5" opacity=".6"/>
+    <rect x="116" y="204" width="168" height="108" rx="26" fill="url(#basket)"/>
+    <rect x="116" y="204" width="168" height="25" rx="12.5" fill="#6b7599"/>
+    <rect x="166" y="247" width="68" height="16" rx="8" fill="#c5cbe0"/>
+    <rect x="181" y="251" width="38" height="4" rx="2" fill="#7d86a5"/>
+    <path d="M130 219v80M270 219v80" fill="none" stroke="#ffffff" stroke-width="2" opacity=".08"/>
+    <rect x="130" y="288" width="140" height="4" rx="2" fill="#262b42"/>
+    <rect x="152" y="325" width="26" height="10" rx="5" fill="#1c2135"/>
+    <rect x="222" y="325" width="26" height="10" rx="5" fill="#1c2135"/>
+  </g>
+</svg>

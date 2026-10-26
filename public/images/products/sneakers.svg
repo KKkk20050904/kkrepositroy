@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="厚底老爹鞋">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff6eb"/>
+      <stop offset="1" stop-color="#ffe2c6"/>
+    </linearGradient>
+    <linearGradient id="upper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8e0c2"/>
+      <stop offset="1" stop-color="#e9c195"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#8b5a2b" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="68" cy="80" r="62" fill="#ffffff" opacity=".45"/>
+  <circle cx="338" cy="320" r="82" fill="#ffffff" opacity=".28"/>
+  <ellipse cx="203" cy="330" rx="138" ry="16" fill="#8b5a2b" opacity=".1"/>
+  <g filter="url(#shadow)">
+    <path d="M74 288h258c14 0 22 8 21 20-1 13-10 20-25 20H82c-16 0-25-8-25-21 0-11 6-19 17-19Z" fill="#fdfbf7"/>
+    <path d="M78 288h252c9 0 15 3 19 8H62c3-5 8-8 16-8Z" fill="#e7ddd2"/>
+    <path d="M90 288 99 239c3-15 13-24 28-28l67-18 36-34c12-11 27-13 39-4l27 19c8 6 12 16 10 26l-7 39 42 17c17 7 25 19 24 32H90Z" fill="url(#upper)"/>
+    <path d="M229 158c9-9 21-10 31-2l26 19c6 5 9 12 8 20l-2 12-64-4 1-45Z" fill="#f0cda5"/>
+    <path d="M100 238c31-8 60-15 87-26l29 10-32 66H90Z" fill="#f7e3c8" opacity=".85"/>
+    <path d="M193 193c14-13 30-21 45-24" fill="none" stroke="#c69b6d" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 6"/>
+    <path d="m206 185 18 8M213 177l17 8M221 170l16 8M230 164l14 8" fill="none" stroke="#354361" stroke-width="6" stroke-linecap="round"/>
+    <path d="M103 276c54-10 105-12 156-7 30 3 54 6 72 9" fill="none" stroke="#c69b6d" stroke-width="3" stroke-dasharray="4 6" stroke-linecap="round"/>
+    <path d="m307 201 20 9c7 3 10 10 9 17l-2 9-26-9Z" fill="#e2573f"/>
+    <path d="M296 228c9 2 15 8 17 16" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity=".7"/>
+    <circle cx="133" cy="263" r="4" fill="#ffffff" opacity=".7"/>
+  </g>
+</svg>

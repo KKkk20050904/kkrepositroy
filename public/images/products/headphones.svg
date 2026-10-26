@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="无线蓝牙耳机">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2f6ff"/>
+      <stop offset="1" stop-color="#dce6ff"/>
+    </linearGradient>
+    <linearGradient id="cup" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#445273"/>
+      <stop offset="1" stop-color="#27314d"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#27314d" flood-opacity=".2"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="330" cy="74" r="74" fill="#ffffff" opacity=".42"/>
+  <circle cx="62" cy="336" r="58" fill="#ffffff" opacity=".3"/>
+  <ellipse cx="200" cy="335" rx="98" ry="14" fill="#27314d" opacity=".1"/>
+  <g filter="url(#shadow)">
+    <path d="M104 240v-42c0-56 43-100 96-100s96 44 96 100v42" fill="none" stroke="#2b3550" stroke-width="26" stroke-linecap="round"/>
+    <path d="M119 228v-30c0-47 36-83 81-83s81 36 81 83v30" fill="none" stroke="#66779f" stroke-width="7" stroke-linecap="round" opacity=".55"/>
+    <rect x="86" y="216" width="66" height="112" rx="29" fill="url(#cup)"/>
+    <rect x="248" y="216" width="66" height="112" rx="29" fill="url(#cup)"/>
+    <rect x="99" y="235" width="40" height="70" rx="18" fill="#58698f"/>
+    <rect x="261" y="235" width="40" height="70" rx="18" fill="#58698f"/>
+    <rect x="106" y="246" width="13" height="44" rx="6" fill="#8c9bc0" opacity=".55"/>
+    <rect x="268" y="246" width="13" height="44" rx="6" fill="#8c9bc0" opacity=".55"/>
+    <circle cx="119" cy="319" r="3.4" fill="#9fe8d2"/>
+    <circle cx="281" cy="319" r="3.4" fill="#9fe8d2"/>
+  </g>
+</svg>

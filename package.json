@@ -1,0 +1,22 @@
+{
+  "name": "pinduoduo-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "一个简单、零依赖的拼多多风格移动端 Demo：首页、分类、个人中心",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test/server.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "pinduoduo",
+    "demo",
+    "vanilla-js",
+    "mobile-web"
+  ],
+  "license": "MIT"
+}

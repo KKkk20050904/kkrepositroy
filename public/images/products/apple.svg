@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="红富士苹果">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff4ee"/>
+      <stop offset="1" stop-color="#ffe1d1"/>
+    </linearGradient>
+    <radialGradient id="apple" cx=".35" cy=".28" r=".85">
+      <stop offset="0" stop-color="#ff7a66"/>
+      <stop offset=".55" stop-color="#e94035"/>
+      <stop offset="1" stop-color="#b91f24"/>
+    </radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#9f1f22" flood-opacity=".2"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="322" cy="82" r="72" fill="#ffffff" opacity=".4"/>
+  <circle cx="74" cy="328" r="58" fill="#ffffff" opacity=".28"/>
+  <ellipse cx="200" cy="334" rx="105" ry="16" fill="#9f1f22" opacity=".1"/>
+  <g filter="url(#shadow)">
+    <path d="M201 126c-18-18-51-24-77-5-31 23-38 72-19 114 15 33 42 65 66 69 12 2 22-7 30-7s18 9 30 7c24-4 51-36 66-69 19-42 12-91-19-114-26-19-59-13-77 5Z" fill="url(#apple)"/>
+    <path d="M200 128c-2-20 5-38 20-49" fill="none" stroke="#7a4a2a" stroke-width="10" stroke-linecap="round"/>
+    <path d="M213 96c17-28 50-35 63-19 8 10 2 27-15 36-17 9-37 5-48-17Z" fill="#58a35a"/>
+    <path d="M229 87c12-10 27-15 38-12" fill="none" stroke="#3f7f43" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="150" cy="173" rx="23" ry="35" fill="#ffffff" opacity=".26" transform="rotate(-28 150 173)"/>
+    <path d="M120 244c8 24 25 43 46 54" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity=".16"/>
+    <circle cx="272" cy="245" r="5" fill="#ffffff" opacity=".28"/>
+    <circle cx="287" cy="261" r="3" fill="#ffffff" opacity=".22"/>
+  </g>
+</svg>

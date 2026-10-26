@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="不锈钢保温杯">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ecf9f6"/>
+      <stop offset="1" stop-color="#d5eee8"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8ed9c8"/>
+      <stop offset=".45" stop-color="#5fbaaa"/>
+      <stop offset="1" stop-color="#3d9a8b"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#2b6c62" flood-opacity=".2"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="324" cy="78" r="70" fill="#ffffff" opacity=".45"/>
+  <circle cx="70" cy="330" r="56" fill="#ffffff" opacity=".28"/>
+  <ellipse cx="200" cy="338" rx="76" ry="14" fill="#2b6c62" opacity=".12"/>
+  <g filter="url(#shadow)">
+    <rect x="143" y="128" width="114" height="202" rx="37" fill="url(#body)"/>
+    <rect x="153" y="101" width="94" height="38" rx="14" fill="#284d49"/>
+    <rect x="161" y="110" width="78" height="9" rx="4.5" fill="#416e68"/>
+    <path d="M154 163h92" fill="none" stroke="#a6e3d6" stroke-width="7" opacity=".55"/>
+    <rect x="158" y="177" width="16" height="122" rx="8" fill="#ffffff" opacity=".24"/>
+    <circle cx="200" cy="230" r="27" fill="#ffffff" opacity=".17"/>
+    <path d="M200 214c-11 0-16 10-12 17 3 5 8 6 12 2 4 4 9 3 12-2 4-7-1-17-12-17Z" fill="#ffffff" opacity=".75"/>
+    <path d="M200 223v10" fill="none" stroke="#3d9a8b" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M159 298h82" fill="none" stroke="#2f7f73" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+  </g>
+</svg>
