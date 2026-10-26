@@ -6,39 +6,84 @@
     </view>
 
     <view class="form">
-      <input
-        class="input"
-        v-model="form.username"
-        placeholder="用户名（登录账号，必填）"
-        placeholder-class="ph"
-      />
-      <input
-        class="input"
-        v-model="form.nickname"
-        placeholder="昵称（选填）"
-        placeholder-class="ph"
-      />
-      <input
-        class="input"
-        v-model="form.password"
-        password
-        placeholder="密码（至少 6 位）"
-        placeholder-class="ph"
-      />
-      <input
-        class="input"
-        v-model="form.confirmPassword"
-        password
-        placeholder="确认密码"
-        placeholder-class="ph"
-      />
-      <input
-        class="input"
-        v-model="form.phone"
-        placeholder="手机号（选填）"
-        placeholder-class="ph"
-      />
-      <button class="btn-primary" :loading="loading" @click="handleRegister">注 册</button>
+      <view class="input-wrap">
+        <input
+          class="input"
+          v-model="form.username"
+          placeholder="用户名（3-30位字母、数字或下划线）"
+          placeholder-class="ph"
+          @confirm="handleRegister"
+          :confirm-type="'done'"
+        />
+      </view>
+
+      <view class="input-wrap">
+        <input
+          class="input"
+          v-model="form.nickname"
+          placeholder="昵称（选填）"
+          placeholder-class="ph"
+          @confirm="handleRegister"
+          :confirm-type="'done'"
+        />
+      </view>
+
+      <view class="input-wrap">
+        <input
+          class="input"
+          v-model="form.password"
+          :password="!showPwd"
+          placeholder="密码（至少 6 位）"
+          placeholder-class="ph"
+          @confirm="handleRegister"
+          :confirm-type="'done'"
+        />
+        <text class="eye" @click="showPwd = !showPwd">{{ showPwd ? '隐藏' : '显示' }}</text>
+      </view>
+
+      <view class="input-wrap">
+        <input
+          class="input"
+          v-model="form.confirmPassword"
+          :password="!showPwd"
+          placeholder="确认密码"
+          placeholder-class="ph"
+          @confirm="handleRegister"
+          :confirm-type="'done'"
+        />
+      </view>
+
+      <view class="input-wrap">
+        <input
+          class="input"
+          v-model="form.phone"
+          type="number"
+          maxlength="11"
+          placeholder="手机号（选填，11位）"
+          placeholder-class="ph"
+          @confirm="handleRegister"
+          :confirm-type="'done'"
+        />
+      </view>
+
+      <view class="input-wrap">
+        <input
+          class="input"
+          v-model="form.email"
+          placeholder="邮箱（选填）"
+          placeholder-class="ph"
+          @confirm="handleRegister"
+          :confirm-type="'done'"
+        />
+      </view>
+
+      <button
+        class="btn-primary"
+        :class="{ 'btn-disabled': !canSubmit }"
+        :loading="loading"
+        :disabled="!canSubmit || loading"
+        @click="handleRegister"
+      >注 册</button>
 
       <view class="link-row">
         <text class="link" @click="goLogin">已有账号？去登录</text>
@@ -51,17 +96,28 @@
 import { register } from '../../api/auth.js'
 import { setToken, setUser } from '../../common/request.js'
 
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/
+const PHONE_RE = /^1\d{10}$/
+const EMAIL_RE = /^[\w.-]+@[\w-]+(\.[\w-]+)+$/
+
 export default {
   data() {
     return {
       loading: false,
+      showPwd: false,
       form: {
         username: '',
         nickname: '',
         password: '',
         confirmPassword: '',
-        phone: ''
+        phone: '',
+        email: ''
       }
+    }
+  },
+  computed: {
+    canSubmit() {
+      return this.form.username.trim() !== '' && this.form.password !== ''
     }
   },
   methods: {
@@ -73,9 +129,15 @@ export default {
       })
     },
     handleRegister() {
-      const { username, nickname, password, confirmPassword, phone } = this.form
-      if (!username || !password) {
-        uni.showToast({ title: '用户名和密码不能为空', icon: 'none' })
+      if (this.loading) return
+      const { username, nickname, password, confirmPassword, phone, email } = this.form
+
+      if (!USERNAME_RE.test(username.trim())) {
+        uni.showToast({ title: '用户名需为 3-30 位字母、数字或下划线', icon: 'none' })
+        return
+      }
+      if (nickname.trim() && nickname.trim().length > 30) {
+        uni.showToast({ title: '昵称不能超过 30 个字符', icon: 'none' })
         return
       }
       if (password.length < 6) {
@@ -86,12 +148,22 @@ export default {
         uni.showToast({ title: '两次输入的密码不一致', icon: 'none' })
         return
       }
+      if (phone.trim() && !PHONE_RE.test(phone.trim())) {
+        uni.showToast({ title: '手机号格式不正确（11位）', icon: 'none' })
+        return
+      }
+      if (email.trim() && !EMAIL_RE.test(email.trim())) {
+        uni.showToast({ title: '邮箱格式不正确', icon: 'none' })
+        return
+      }
+
       this.loading = true
       register({
-        username,
+        username: username.trim(),
         password,
-        nickname: nickname || undefined,
-        phone: phone || undefined
+        nickname: nickname.trim() || undefined,
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined
       })
         .then((data) => {
           setToken(data.token)
@@ -147,15 +219,32 @@ export default {
   margin-top: 80rpx;
 }
 
+.input-wrap {
+  position: relative;
+  height: 96rpx;
+  margin-bottom: 32rpx;
+  background: #f5f7fa;
+  border-radius: 16rpx;
+}
+
 .input {
   height: 96rpx;
   line-height: 96rpx;
   padding: 0 32rpx;
-  margin-bottom: 32rpx;
-  background: #f5f7fa;
-  border-radius: 16rpx;
   font-size: 30rpx;
   color: #333;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.eye {
+  position: absolute;
+  right: 24rpx;
+  top: 0;
+  height: 96rpx;
+  line-height: 96rpx;
+  font-size: 26rpx;
+  color: #7a8699;
 }
 
 .ph {
@@ -174,6 +263,10 @@ export default {
 
 .btn-primary::after {
   border: none;
+}
+
+.btn-disabled {
+  background: #a9bde0;
 }
 
 .link-row {

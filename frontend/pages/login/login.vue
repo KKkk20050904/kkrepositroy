@@ -6,20 +6,37 @@
     </view>
 
     <view class="form">
-      <input
-        class="input"
-        v-model="form.username"
-        placeholder="用户名"
-        placeholder-class="ph"
-      />
-      <input
-        class="input"
-        v-model="form.password"
-        password
-        placeholder="密码"
-        placeholder-class="ph"
-      />
-      <button class="btn-primary" :loading="loading" @click="handleLogin">登 录</button>
+      <view class="input-wrap">
+        <input
+          class="input"
+          v-model="form.username"
+          placeholder="用户名"
+          placeholder-class="ph"
+          @confirm="handleLogin"
+          :confirm-type="'done'"
+        />
+      </view>
+
+      <view class="input-wrap">
+        <input
+          class="input"
+          v-model="form.password"
+          :password="!showPwd"
+          placeholder="密码"
+          placeholder-class="ph"
+          @confirm="handleLogin"
+          :confirm-type="'done'"
+        />
+        <text class="eye" @click="showPwd = !showPwd">{{ showPwd ? '隐藏' : '显示' }}</text>
+      </view>
+
+      <button
+        class="btn-primary"
+        :class="{ 'btn-disabled': !canSubmit }"
+        :loading="loading"
+        :disabled="!canSubmit || loading"
+        @click="handleLogin"
+      >登 录</button>
 
       <view class="link-row">
         <text class="link" @click="goRegister">还没有账号？去注册</text>
@@ -36,10 +53,16 @@ export default {
   data() {
     return {
       loading: false,
+      showPwd: false,
       form: {
         username: '',
         password: ''
       }
+    }
+  },
+  computed: {
+    canSubmit() {
+      return this.form.username.trim() !== '' && this.form.password !== ''
     }
   },
   methods: {
@@ -47,13 +70,18 @@ export default {
       uni.navigateTo({ url: '/pages/register/register' })
     },
     handleLogin() {
+      if (this.loading) return
       const { username, password } = this.form
-      if (!username || !password) {
-        uni.showToast({ title: '请输入用户名和密码', icon: 'none' })
+      if (!username.trim()) {
+        uni.showToast({ title: '请输入用户名', icon: 'none' })
+        return
+      }
+      if (!password) {
+        uni.showToast({ title: '请输入密码', icon: 'none' })
         return
       }
       this.loading = true
-      login({ username, password })
+      login({ username: username.trim(), password })
         .then((data) => {
           setToken(data.token)
           setUser(data.user)
@@ -108,15 +136,35 @@ export default {
   margin-top: 100rpx;
 }
 
+.input-wrap {
+  position: relative;
+  height: 96rpx;
+  margin-bottom: 32rpx;
+  background: #f5f7fa;
+  border-radius: 16rpx;
+}
+
 .input {
   height: 96rpx;
   line-height: 96rpx;
   padding: 0 32rpx;
-  margin-bottom: 32rpx;
-  background: #f5f7fa;
-  border-radius: 16rpx;
   font-size: 30rpx;
   color: #333;
+}
+
+.input-wrap .input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.eye {
+  position: absolute;
+  right: 24rpx;
+  top: 0;
+  height: 96rpx;
+  line-height: 96rpx;
+  font-size: 26rpx;
+  color: #7a8699;
 }
 
 .ph {
@@ -135,6 +183,10 @@ export default {
 
 .btn-primary::after {
   border: none;
+}
+
+.btn-disabled {
+  background: #a9bde0;
 }
 
 .link-row {

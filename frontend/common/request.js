@@ -26,7 +26,23 @@ export function request(options) {
             resolve(body.data)
           } else {
             const msg = (body && body.message) || '请求失败'
-            uni.showToast({ title: msg, icon: 'none' })
+            // 登录态失效：清除本地登录信息，提示重新登录
+            if (body && body.code === 1004) {
+              clearAuth()
+              uni.showModal({
+                title: '提示',
+                content: msg || '登录已过期，请重新登录',
+                showCancel: false,
+                confirmText: '去登录',
+                success: (r) => {
+                  if (r.confirm) {
+                    uni.navigateTo({ url: '/pages/login/login' })
+                  }
+                }
+              })
+            } else {
+              uni.showToast({ title: msg, icon: 'none' })
+            }
             reject(body)
           }
         } else {

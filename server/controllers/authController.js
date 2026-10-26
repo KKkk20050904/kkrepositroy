@@ -2,6 +2,42 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 
+// ---------- 校验规则 ----------
+
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/; // 3-30 位字母/数字/下划线
+const PHONE_RE = /^1\d{10}$/; // 11 位手机号
+const EMAIL_RE = /^[\w.-]+@[\w-]+(\.[\w-]+)+$/;
+const PASSWORD_MAX = 72; // bcrypt 输入上限
+
+// 登录防爆破：同一用户名连续失败 5 次，锁定 5 分钟（内存实现，重启失效）
+const MAX_FAILS = 5;
+const LOCK_MINUTES = 5;
+const loginFails = new Map(); // username -> { count, lockedUntil }
+
+function checkLocked(username) {
+  const rec = loginFails.get(username);
+  if (!rec) return false;
+  if (rec.lockedUntil && Date.now() < rec.lockedUntil) {
+    const leftMin = Math.ceil((rec.lockedUntil - Date.now()) / 60000);
+    return { leftMin };
+  }
+  return false;
+}
+
+function recordFail(username) {
+  const rec = loginFails.get(username) || { count: 0, lockedUntil: 0 };
+  rec.count += 1;
+  if (rec.count >= MAX_FAILS) {
+    rec.lockedUntil = Date.now() + LOCK_MINUTES * 60000;
+    rec.count = 0;
+  }
+  loginFails.set(username, rec);
+}
+
+function clearFails(username) {
+  loginFails.delete(username);
+}
+
 // ---------- 工具函数 ----------
 
 // 生成 JWT
@@ -19,6 +55,17 @@ function safeUser(user) {
   return rest;
 }
 
+// 校验手机号/邮箱（为空或未传则跳过）
+function validateContact(phone, email) {
+  if (phone && !PHONE_RE.test(String(phone))) {
+    return { ok: false, message: '手机号格式不正确' };
+  }
+  if (email && !EMAIL_RE.test(String(email))) {
+    return { ok: false, message: '邮箱格式不正确' };
+  }
+  return { ok: true };
+}
+
 // ---------- 接口实现 ----------
 
 /**
@@ -33,11 +80,21 @@ async function register(req, res) {
     if (!username || !password) {
       return res.status(400).json({ code: 1001, message: '用户名和密码不能为空' });
     }
-    if (String(username).length > 30) {
-      return res.status(400).json({ code: 1001, message: '用户名长度不能超过 30 个字符' });
+    if (!USERNAME_RE.test(String(username))) {
+      return res.status(400).json({ code: 1001, message: '用户名需为 3-30 位字母、数字或下划线' });
     }
     if (String(password).length < 6) {
       return res.status(400).json({ code: 1001, message: '密码长度不能少于 6 位' });
+    }
+    if (String(password).length > PASSWORD_MAX) {
+      return res.status(400).json({ code: 1001, message: `密码长度不能超过 ${PASSWORD_MAX} 位` });
+    }
+    if (nickname && String(nickname).length > 30) {
+      return res.status(400).json({ code: 1001, message: '昵称长度不能超过 30 个字符' });
+    }
+    const contact = validateContact(phone, email);
+    if (!contact.ok) {
+      return res.status(400).json({ code: 1001, message: contact.message });
     }
 
     // 检查用户名是否已存在
@@ -83,17 +140,29 @@ async function login(req, res) {
       return res.status(400).json({ code: 1001, message: '用户名和密码不能为空' });
     }
 
+    // 防爆破：检查是否被锁定
+    const locked = checkLocked(String(username));
+    if (locked) {
+      return res.status(429).json({
+        code: 1007,
+        message: `尝试次数过多，账号已锁定，请 ${locked.leftMin} 分钟后再试`
+      });
+    }
+
     const [rows] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
     if (rows.length === 0) {
+      recordFail(String(username));
       return res.status(401).json({ code: 1003, message: '用户名或密码错误' });
     }
 
     const user = rows[0];
     const ok = await bcrypt.compare(String(password), user.password);
     if (!ok) {
+      recordFail(String(username));
       return res.status(401).json({ code: 1003, message: '用户名或密码错误' });
     }
 
+    clearFails(String(username));
     res.json({
       code: 0,
       message: '登录成功',
@@ -133,11 +202,41 @@ async function updateMe(req, res) {
     const fields = [];
     const values = [];
 
-    if (nickname !== undefined) { fields.push('nickname = ?'); values.push(nickname); }
-    if (avatar !== undefined) { fields.push('avatar = ?'); values.push(avatar); }
-    if (phone !== undefined) { fields.push('phone = ?'); values.push(phone); }
-    if (email !== undefined) { fields.push('email = ?'); values.push(email); }
-    if (student_id !== undefined) { fields.push('student_id = ?'); values.push(student_id); }
+    if (nickname !== undefined) {
+      if (String(nickname).length > 30) {
+        return res.status(400).json({ code: 1001, message: '昵称长度不能超过 30 个字符' });
+      }
+      fields.push('nickname = ?');
+      values.push(nickname);
+    }
+    if (avatar !== undefined) {
+      if (String(avatar).length > 255) {
+        return res.status(400).json({ code: 1001, message: '头像地址过长' });
+      }
+      fields.push('avatar = ?');
+      values.push(avatar);
+    }
+    if (phone !== undefined) {
+      if (phone && !PHONE_RE.test(String(phone))) {
+        return res.status(400).json({ code: 1001, message: '手机号格式不正确' });
+      }
+      fields.push('phone = ?');
+      values.push(phone || null);
+    }
+    if (email !== undefined) {
+      if (email && !EMAIL_RE.test(String(email))) {
+        return res.status(400).json({ code: 1001, message: '邮箱格式不正确' });
+      }
+      fields.push('email = ?');
+      values.push(email || null);
+    }
+    if (student_id !== undefined) {
+      if (String(student_id).length > 30) {
+        return res.status(400).json({ code: 1001, message: '学号长度不能超过 30 个字符' });
+      }
+      fields.push('student_id = ?');
+      values.push(student_id || null);
+    }
 
     if (fields.length === 0) {
       return res.status(400).json({ code: 1001, message: '没有需要更新的字段' });
