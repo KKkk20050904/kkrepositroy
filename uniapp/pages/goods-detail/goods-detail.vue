@@ -31,13 +31,15 @@ export default {
       uni.request({
         url: `http://localhost:3000/api/goods/${this.goodsId}`,
         header: {
-          token: uni.getStorageSync('token') || ''
+          Authorization: uni.getStorageSync('token')
+            ? `Bearer ${uni.getStorageSync('token')}`
+            : ''
         },
         success: (res) => {
           if (res.data.code === 200) {
             this.detail = res.data.data
           } else {
-            uni.showToast({ title: res.data.msg, icon: 'none' })
+            uni.showToast({ title: res.data.msg || res.data.message || '获取商品详情失败', icon: 'none' })
           }
         },
         fail() {
@@ -57,13 +59,13 @@ export default {
         uni.request({
           url: `http://localhost:3000/api/collect/${this.goodsId}`,
           method: "DELETE",
-          header: { token },
+          header: { Authorization: `Bearer ${token}` },
           success: (res) => {
             if (res.data.code === 200) {
               this.detail.isCollect = false
               uni.showToast({ title: "已取消收藏" })
             } else {
-              uni.showToast({ title: res.data.msg, icon: "none" })
+              uni.showToast({ title: res.data.msg || res.data.message || '操作失败', icon: "none" })
             }
           }
         })
@@ -72,14 +74,14 @@ export default {
         uni.request({
           url: "http://localhost:3000/api/collect",
           method: "POST",
-          header: { token },
+          header: { Authorization: `Bearer ${token}` },
           data: { goodsId: this.goodsId },
           success: (res) => {
             if (res.data.code === 200) {
               this.detail.isCollect = true
               uni.showToast({ title: "收藏成功" })
             } else {
-              uni.showToast({ title: res.data.msg, icon: "none" })
+              uni.showToast({ title: res.data.msg || res.data.message || '操作失败', icon: "none" })
             }
           }
         })

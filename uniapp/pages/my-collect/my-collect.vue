@@ -56,7 +56,7 @@ export default {
       this.loading = true
       uni.request({
         url: "http://localhost:3000/api/collect",
-        header: { token: uni.getStorageSync('token') },
+        header: { Authorization: `Bearer ${uni.getStorageSync('token')}` },
         data: { page: this.page, pageSize: this.pageSize },
         success: (res) => {
           if (res.data.code === 200) {
@@ -68,7 +68,7 @@ export default {
             }
             this.noMore = this.collectList.length >= total
           } else {
-            uni.showToast({ title: res.data.msg, icon: 'none' })
+            uni.showToast({ title: res.data.msg || res.data.message || '获取收藏列表失败', icon: 'none' })
           }
         },
         complete: () => {
