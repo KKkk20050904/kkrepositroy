@@ -52,6 +52,8 @@ server/
 | POST | /api/auth/login | 用户登录 | 否 |
 | GET | /api/auth/me | 获取当前用户信息 | 是 |
 | PUT | /api/auth/me | 更新个人信息 | 是 |
+| GET | /api/msg/conversations | 获取会话列表及未读数 | 是 |
+| GET | /api/msg/contacts?keyword= | 搜索可私信的同学 | 是 |
 | GET | /api/msg?peerId=2&afterId=0 | 获取与用户的聊天记录 | 是 |
 | POST | /api/msg | 发送私信 | 是 |
 
@@ -66,9 +68,11 @@ server/
 }
 ```
 
-消息不能为空，最长 2000 个字符。成功返回 HTTP 201 和 `data` 中的 `id`、`senderId`、`receiverId`、`content`、`createdAt`。
+消息不能为空，最长 2000 个字符。成功返回 HTTP 201 和 `data` 中的 `id`、`senderId`、`receiverId`、`content`、`isRead`、`createdAt`。
 
-`GET /api/msg?peerId=2&afterId=0` 首次返回最近 50 条记录；将 `afterId` 设为当前最后一条消息 ID 可获取新消息（最多 100 条）。两个接口均要求登录，响应格式遵循 `{ code, message, data }`。
+`GET /api/msg?peerId=2&afterId=0` 首次返回最近 50 条记录，并将当前用户收到的这些消息标为已读；将 `afterId` 设为当前最后一条消息 ID 可获取新消息（最多 100 条）。
+
+`GET /api/msg/conversations` 返回最近联系的用户、最后一条消息和未读数。`GET /api/msg/contacts?keyword=...` 返回可联系的用户，支持按昵称或用户名搜索。所有私信接口均要求登录，响应格式遵循 `{ code, message, data }`。
 
 ### 1. 注册 POST /api/auth/register
 

@@ -13,6 +13,13 @@
       }
     },
     {
+      "path": "pages/chat/list",
+      "style": {
+        "navigationBarTitleText": "我的消息",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
       "path": "pages/chat/chat",
       "style": {
         "navigationBarTitleText": "私信聊天",

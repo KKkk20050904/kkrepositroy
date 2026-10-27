@@ -1,10 +1,12 @@
 <template>
   <view class="chat-page">
     <view class="chat-heading">
-      <view class="peer-avatar">{{ peerName.slice(0, 1) }}</view>
+      <text class="back-button" @click="backToMessages">‹ 消息</text>
+      <image v-if="peerAvatar" class="peer-avatar" :src="peerAvatar" mode="aspectFill"></image>
+      <view v-else class="peer-avatar avatar-placeholder">{{ peerName.slice(0, 1) }}</view>
       <view class="peer-info">
         <text class="peer-name">{{ peerName }}</text>
-        <text class="peer-status">校园私信 · 请友好沟通</text>
+        <text class="peer-status"><text class="status-dot"></text>校园私信 · 请友好沟通</text>
       </view>
       <text class="refresh-button" @click="loadMessages">刷新</text>
     </view>
@@ -32,7 +34,8 @@
         class="message-row"
         :class="{ 'message-mine': message.senderId === currentUserId }"
       >
-        <view v-if="message.senderId !== currentUserId" class="message-avatar">{{ peerName.slice(0, 1) }}</view>
+        <image v-if="message.senderId !== currentUserId && peerAvatar" class="message-avatar" :src="peerAvatar" mode="aspectFill"></image>
+        <view v-else-if="message.senderId !== currentUserId" class="message-avatar avatar-placeholder">{{ peerName.slice(0, 1) }}</view>
         <view class="message-body">
           <text class="message-bubble">{{ message.content }}</text>
           <text class="message-time">{{ formatTime(message.createdAt) }}</text>
@@ -94,6 +97,7 @@ export default {
     return {
       peerId: 0,
       peerName: '同学',
+      peerAvatar: '',
       currentUserId: 0,
       draft: '',
       messages: [],
@@ -127,6 +131,7 @@ export default {
     }
     this.peerId = peerId
     this.peerName = String(options.name || '同学').slice(0, 30)
+    this.peerAvatar = options.avatar || ''
     const user = getUser()
     this.currentUserId = Number(user && user.id) || 0
     uni.setNavigationBarTitle({ title: this.peerName })
@@ -152,6 +157,11 @@ export default {
         clearInterval(this.pollTimer)
         this.pollTimer = null
       }
+    },
+    backToMessages() {
+      uni.navigateBack({
+        fail: () => uni.redirectTo({ url: '/pages/chat/list' })
+      })
     },
     async loadMessages() {
       if (!this.peerId) return
@@ -236,19 +246,35 @@ export default {
 .chat-page {
   min-height: 100vh;
   height: 100vh;
+  max-width: 960rpx;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  background: #f5f6f8;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, .55), transparent 34%),
+    #f5f3f2;
 }
 
 .chat-heading {
-  height: 112rpx;
+  min-height: 122rpx;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  padding: 0 30rpx;
-  background: #fff;
-  border-bottom: 1rpx solid #e9ebef;
+  padding: calc(12rpx + env(safe-area-inset-top)) 24rpx 16rpx;
+  color: #fff;
+  background:
+    radial-gradient(circle at 88% -18%, rgba(255, 255, 255, .22), transparent 38%),
+    linear-gradient(135deg, #ef4136 0%, #dc241f 54%, #bf1713 100%);
+  border-radius: 0 0 30rpx 30rpx;
+  box-shadow: 0 12rpx 34rpx rgba(191, 23, 19, .2);
+}
+
+.back-button {
+  margin-right: 12rpx;
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, .92);
+  font-size: 23rpx;
 }
 
 .peer-avatar,
@@ -259,68 +285,103 @@ export default {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  color: #a45e46;
-  background: #f7ddcf;
+  color: #bd3029;
+  background: #fff0ef;
   font-size: 30rpx;
   font-weight: 600;
 }
 
+.peer-avatar {
+  width: 68rpx;
+  height: 68rpx;
+  flex: 0 0 auto;
+  border: 3rpx solid rgba(255, 255, 255, .8);
+}
+
+.avatar-placeholder {
+  color: #bd3029;
+  background: linear-gradient(145deg, #fff0ef, #ffd8cf);
+}
+
 .peer-info {
-  margin-left: 18rpx;
+  min-width: 0;
+  margin-left: 14rpx;
   display: flex;
   flex: 1;
   flex-direction: column;
 }
 
 .peer-name {
-  color: #30343b;
+  overflow: hidden;
+  color: #fff;
   font-size: 30rpx;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .peer-status {
   margin-top: 8rpx;
-  color: #a0a4ad;
+  color: rgba(255, 255, 255, .76);
   font-size: 22rpx;
 }
 
+.status-dot {
+  width: 12rpx;
+  height: 12rpx;
+  margin-right: 8rpx;
+  display: inline-block;
+  border-radius: 50%;
+  background: #ffe27a;
+}
+
 .refresh-button {
-  padding: 12rpx 4rpx 12rpx 20rpx;
-  color: #477ed1;
+  padding: 12rpx 4rpx 12rpx 16rpx;
+  color: #fff;
   font-size: 25rpx;
 }
 
 .message-list {
   flex: 1;
   min-height: 0;
-  padding: 20rpx 24rpx;
+  padding: 26rpx 22rpx;
   box-sizing: border-box;
 }
 
 .empty-state,
 .load-state {
-  min-height: 220rpx;
+  min-height: 300rpx;
+  margin: 18rpx 0;
+  padding: 32rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 18rpx;
-  color: #999eaa;
+  border: 1rpx solid #f1eae7;
+  border-radius: 22rpx;
+  color: #9a8f8b;
+  background: #fff;
   font-size: 26rpx;
 }
 
 .empty-icon {
-  color: #bdc5d2;
+  color: #e02e24;
   font-size: 58rpx;
 }
 
 .retry-button {
   margin: 0;
   padding: 0 24rpx;
-  color: #477ed1;
-  background: #edf3ff;
+  border-radius: 999rpx;
+  color: #fff;
+  background: #e02e24;
   font-size: 24rpx;
   line-height: 62rpx;
+}
+
+.retry-button::after {
+  border: none;
 }
 
 .message-row {
@@ -343,7 +404,7 @@ export default {
 
 .my-avatar {
   color: #fff;
-  background: #6d91d2;
+  background: #e02e24;
 }
 
 .message-body {
@@ -354,8 +415,9 @@ export default {
 
 .message-bubble {
   padding: 18rpx 22rpx;
+  border: 1rpx solid #f1eae7;
   border-radius: 8rpx 22rpx 22rpx 22rpx;
-  color: #353941;
+  color: #4a403d;
   background: #fff;
   font-size: 28rpx;
   line-height: 1.55;
@@ -364,12 +426,15 @@ export default {
 
 .message-mine .message-bubble {
   border-radius: 22rpx 8rpx 22rpx 22rpx;
-  background: #dceaff;
+  border-color: #e02e24;
+  color: #fff;
+  background: linear-gradient(135deg, #ef4136, #dc241f);
+  box-shadow: 0 7rpx 18rpx rgba(207, 28, 26, .15);
 }
 
 .message-time {
   margin: 8rpx 6rpx 0;
-  color: #a7aab2;
+  color: #a79d99;
   font-size: 20rpx;
 }
 
@@ -379,7 +444,7 @@ export default {
 
 .sync-error {
   padding: 12rpx 0;
-  color: #d5765e;
+  color: #d72c24;
   font-size: 22rpx;
   text-align: center;
 }
@@ -390,13 +455,14 @@ export default {
 
 .composer {
   flex: 0 0 auto;
-  padding: 12rpx 24rpx calc(18rpx + env(safe-area-inset-bottom));
-  border-top: 1rpx solid #e7e9ed;
+  padding: 12rpx 22rpx calc(18rpx + env(safe-area-inset-bottom));
+  border-top: 1rpx solid #f1eae7;
   background: #fff;
+  box-shadow: 0 -8rpx 24rpx rgba(70, 40, 30, .055);
 }
 
 .emoji-panel {
-  max-height: 230rpx;
+  max-height: 300rpx;
   margin: 0 -4rpx 12rpx;
   display: flex;
   flex-wrap: wrap;
@@ -416,16 +482,17 @@ export default {
 .kaomoji-item {
   margin: 4rpx;
   padding: 8rpx 12rpx;
-  border-radius: 10rpx;
-  color: #626875;
-  background: #f5f6f9;
+  border: 1rpx solid #f1eae7;
+  border-radius: 999rpx;
+  color: #766b67;
+  background: #fff8f6;
   font-size: 20rpx;
 }
 
 .symbol-item {
   width: 12.5%;
   height: 60rpx;
-  color: #64708a;
+  color: #d72c24;
   font-size: 34rpx;
   line-height: 60rpx;
   text-align: center;
@@ -439,8 +506,9 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 12rpx;
-  background: #fff7f2;
+  border: 1rpx solid #f1eae7;
+  border-radius: 14rpx;
+  background: #fff8f6;
 }
 
 .sticker-emoji {
@@ -449,7 +517,7 @@ export default {
 
 .sticker-label {
   margin-top: 4rpx;
-  color: #77727a;
+  color: #9a8f8b;
   font-size: 18rpx;
 }
 
@@ -460,20 +528,20 @@ export default {
 }
 
 .tool-button {
-  color: #707783;
+  color: #e02e24;
   font-size: 38rpx;
   line-height: 1;
 }
 
 .tool-label {
   margin-left: 10rpx;
-  color: #727985;
+  color: #766b67;
   font-size: 22rpx;
 }
 
 .tool-hint {
   margin-left: auto;
-  color: #b0b4bc;
+  color: #b7ada9;
   font-size: 19rpx;
 }
 
@@ -483,9 +551,10 @@ export default {
   max-height: 220rpx;
   padding: 16rpx 18rpx;
   box-sizing: border-box;
-  border-radius: 12rpx;
-  color: #333740;
-  background: #f6f7f9;
+  border: 1rpx solid #f1eae7;
+  border-radius: 14rpx;
+  color: #2c2422;
+  background: #faf8f7;
   font-size: 27rpx;
   line-height: 1.5;
 }
@@ -499,23 +568,25 @@ export default {
 }
 
 .char-count {
-  color: #afb2b9;
+  color: #b7ada9;
   font-size: 20rpx;
 }
 
 .send-button {
   margin: 0;
   padding: 0 36rpx;
-  border-radius: 10rpx;
+  border-radius: 999rpx;
   color: #fff;
-  background: #3978d4;
+  background: #e02e24;
+  box-shadow: 0 8rpx 20rpx rgba(207, 28, 26, .2);
   font-size: 26rpx;
   line-height: 66rpx;
 }
 
 .send-button[disabled] {
   color: #fff;
-  background: #a9bfdf;
+  background: #d9aaa6;
+  box-shadow: none;
 }
 
 .send-button::after {
@@ -525,7 +596,7 @@ export default {
 .send-error {
   margin-top: 8rpx;
   display: block;
-  color: #d76859;
+  color: #d72c24;
   font-size: 22rpx;
   text-align: right;
 }
