@@ -11,6 +11,13 @@
       "style": {
         "navigationBarTitleText": "注册"
       }
+    },
+    {
+      "path": "pages/chat/chat",
+      "style": {
+        "navigationBarTitleText": "私信聊天",
+        "enablePullDownRefresh": true
+      }
     }
   ],
   "globalStyle": {

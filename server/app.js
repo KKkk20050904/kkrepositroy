@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
+const msgRoutes = require('./routes/msg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ app.get('/api/health', (req, res) => {
 
 // 第一部分：用户登录注册模块
 app.use('/api/auth', authRoutes);
+app.use('/api/msg', msgRoutes);
 
 // 404 兜底
 app.use((req, res) => {
@@ -40,4 +42,6 @@ app.listen(PORT, () => {
   console.log('   POST /api/auth/login     用户登录');
   console.log('   GET  /api/auth/me        获取当前用户信息（需登录）');
   console.log('   PUT  /api/auth/me        更新个人信息（需登录）');
+  console.log('   GET  /api/msg            获取与用户的聊天记录（需登录）');
+  console.log('   POST /api/msg            发送私信（需登录）');
 });

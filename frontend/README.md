@@ -1,6 +1,6 @@
 # 第一部分：用户登录注册模块（前端）
 
-> 对应分工表第 1 项（张三 · feature/zhangsan-auth），仅包含登录 / 注册两个页面。
+> 登录注册与私信聊天前端页面，基于 UniApp + Vue 3。
 > 首页、个人中心等页面由其他成员负责，登录注册页的跳转目标（如首页）待相应成员
 > 的页面合并后再接入。
 
@@ -13,10 +13,13 @@ frontend/
 ├── pages.json              # 页面路由配置
 ├── manifest.json           # 应用配置（HBuilderX）
 ├── common/request.js       # 请求封装 + token 存取
-├── api/auth.js             # 登录注册接口封装
+├── api/
+│   ├── auth.js             # 登录注册接口封装
+│   └── message.js          # 私信历史与发送接口
 └── pages/
     ├── login/login.vue     # 登录页
-    └── register/register.vue  # 注册页
+    ├── register/register.vue  # 注册页
+    └── chat/chat.vue       # 私信聊天页
 ```
 
 ## 运行方式
@@ -30,7 +33,20 @@ frontend/
 
 - 登录页：用户名 + 密码，登录成功后将 token 和用户信息存入本地缓存，供其他模块读取。
 - 注册页：用户名（必填）、密码（至少 6 位）、确认密码、昵称、手机号；注册成功自动登录。
+- 私信页：支持文字、表情、颜文字、特殊符号和文字贴纸，登录用户可与指定用户收发消息并自动轮询新消息。
 - 请求封装：已登录时自动携带 `Authorization: Bearer <token>`，供 `GET/PUT /api/auth/me` 等需要登录态的接口直接复用。
+
+## 打开私信页
+
+商品详情页等知道卖家用户 ID 的页面可以这样打开聊天页：
+
+```js
+uni.navigateTo({
+  url: `/pages/chat/chat?peerId=${seller.id}&name=${encodeURIComponent(seller.nickname || seller.username)}`
+})
+```
+
+私信功能需先运行 `server/db/messages.sql` 创建消息表；后端通过 `POST /api/msg` 保存消息，并通过 `GET /api/msg` 加载聊天记录和轮询新消息。
 
 ## 与其他成员协作约定
 

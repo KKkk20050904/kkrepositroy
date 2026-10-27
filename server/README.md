@@ -1,4 +1,4 @@
-# 第一部分：用户登录注册模块（后端）
+# 后端说明：登录注册与私信模块
 
 > 对应分工表第 1 项（张三 · feature/zhangsan-auth），面向其他成员提供统一接口。
 > 技术栈：Node.js + Express + MySQL，无 AI。
@@ -12,8 +12,11 @@ server/
 ├── controllers/
 │   └── authController.js   # 注册 / 登录 / 个人信息
 ├── middleware/auth.js      # JWT 登录鉴权中间件
-├── routes/auth.js          # /api/auth 路由
+├── routes/
+│   ├── auth.js             # /api/auth 路由
+│   └── msg.js              # /api/msg 私信路由
 ├── db/schema.sql           # 数据库初始化脚本（users 表）
+├── db/messages.sql         # 私信消息表迁移
 ├── .env                    # 本地配置（把 DB_PASSWORD 改成自己的密码）
 └── .env.example            # 配置模板
 ```
@@ -36,7 +39,8 @@ server/
    看到 `✅ 后端服务已启动: http://localhost:3000` 即成功。
 
 > 如果换到其他电脑部署：先安装 MySQL 8.0，再执行初始化脚本
-> `mysql -u root -p < server/db/schema.sql`，最后按 `.env.example` 配置连接信息。
+> `mysql -u root -p < server/db/schema.sql` 和
+> `mysql -u root -p campus_secondhand < server/db/messages.sql`，最后按 `.env.example` 配置连接信息。
 
 ## 对外接口
 
@@ -46,8 +50,25 @@ server/
 | ---- | ---- | ---- | ---- |
 | POST | /api/auth/register | 用户注册（注册成功自动登录） | 否 |
 | POST | /api/auth/login | 用户登录 | 否 |
-| GET | /api/auth/me | 获取当前用户信息 | 是（Bearer Token） |
-| PUT | /api/auth/me | 更新个人信息 | 是（Bearer Token） |
+| GET | /api/auth/me | 获取当前用户信息 | 是 |
+| PUT | /api/auth/me | 更新个人信息 | 是 |
+| GET | /api/msg?peerId=2&afterId=0 | 获取与用户的聊天记录 | 是 |
+| POST | /api/msg | 发送私信 | 是 |
+
+### 私信接口
+
+`POST /api/msg` 使用登录注册模块签发的 Bearer Token。发送者 ID 从已验证的令牌读取，客户端只传收件人和消息内容：
+
+```json
+{
+  "receiverId": 2,
+  "content": "你好，这件商品还在吗？"
+}
+```
+
+消息不能为空，最长 2000 个字符。成功返回 HTTP 201 和 `data` 中的 `id`、`senderId`、`receiverId`、`content`、`createdAt`。
+
+`GET /api/msg?peerId=2&afterId=0` 首次返回最近 50 条记录；将 `afterId` 设为当前最后一条消息 ID 可获取新消息（最多 100 条）。两个接口均要求登录，响应格式遵循 `{ code, message, data }`。
 
 ### 1. 注册 POST /api/auth/register
 
