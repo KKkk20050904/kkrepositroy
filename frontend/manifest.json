@@ -1,0 +1,27 @@
+{
+  "name": "校园闲置交易",
+  "appid": "",
+  "description": "校园闲置物品交易小程序（第一部分：登录注册模块）",
+  "versionName": "1.0.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {
+    "usingComponents": true,
+    "nvueStyleCompiler": "uni-app",
+    "compilerVersion": 3
+  },
+  "quickapp": {},
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false,
+      "es6": true,
+      "minified": true
+    },
+    "usingComponents": true
+  },
+  "h5": {
+    "title": "校园闲置交易"
+  },
+  "vueVersion": "3"
+}
