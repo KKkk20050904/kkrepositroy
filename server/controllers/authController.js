@@ -9,6 +9,10 @@ const PHONE_RE = /^1\d{10}$/; // 11 位手机号
 const EMAIL_RE = /^[\w.-]+@[\w-]+(\.[\w-]+)+$/;
 const PASSWORD_MAX = 72; // bcrypt 输入上限
 
+// JWT 密钥与有效期：优先取 .env，未配置时用开发默认值（防止忘配 .env 直接报错）
+const JWT_SECRET = process.env.JWT_SECRET || 'campus-secondhand-dev-secret';
+const JWT_EXPIRES = process.env.JWT_EXPIRES_IN || '7d';
+
 // 登录防爆破：同一用户名连续失败 5 次，锁定 5 分钟（内存实现，重启失效）
 const MAX_FAILS = 5;
 const LOCK_MINUTES = 5;
@@ -40,12 +44,12 @@ function clearFails(username) {
 
 // ---------- 工具函数 ----------
 
-// 生成 JWT
+// 生成 JWT（payload: userId + username）
 function signToken(user) {
   return jwt.sign(
     { userId: user.id, username: user.username },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES }
   );
 }
 
@@ -55,13 +59,16 @@ function safeUser(user) {
   return rest;
 }
 
-// 校验手机号/邮箱（为空或未传则跳过）
-function validateContact(phone, email) {
+// 校验手机号/邮箱/学号（为空或未传则跳过）
+function validateContact(phone, email, studentId) {
   if (phone && !PHONE_RE.test(String(phone))) {
     return { ok: false, message: '手机号格式不正确' };
   }
   if (email && !EMAIL_RE.test(String(email))) {
     return { ok: false, message: '邮箱格式不正确' };
+  }
+  if (studentId !== undefined && studentId !== null && studentId !== '' && String(studentId).length > 30) {
+    return { ok: false, message: '学号长度不能超过 30 个字符' };
   }
   return { ok: true };
 }
@@ -72,6 +79,7 @@ function validateContact(phone, email) {
  * 用户注册
  * POST /api/auth/register
  * body: { username, password, nickname?, phone?, email?, student_id? }
+ * 成功：201 + { code: 0, data: { token, user } }（注册成功即自动登录）
  */
 async function register(req, res) {
   try {
@@ -92,7 +100,7 @@ async function register(req, res) {
     if (nickname && String(nickname).length > 30) {
       return res.status(400).json({ code: 1001, message: '昵称长度不能超过 30 个字符' });
     }
-    const contact = validateContact(phone, email);
+    const contact = validateContact(phone, email, student_id);
     if (!contact.ok) {
       return res.status(400).json({ code: 1001, message: contact.message });
     }
@@ -131,6 +139,8 @@ async function register(req, res) {
  * 用户登录
  * POST /api/auth/login
  * body: { username, password }
+ * 成功：200 + { code: 0, data: { token, user } }
+ * 连续失败 5 次锁定 5 分钟：429 + code 1007
  */
 async function login(req, res) {
   try {
@@ -156,8 +166,8 @@ async function login(req, res) {
     }
 
     const user = rows[0];
-    const ok = await bcrypt.compare(String(password), user.password);
-    if (!ok) {
+    const matched = await bcrypt.compare(String(password), user.password);
+    if (!matched) {
       recordFail(String(username));
       return res.status(401).json({ code: 1003, message: '用户名或密码错误' });
     }
@@ -177,6 +187,7 @@ async function login(req, res) {
 /**
  * 获取当前登录用户信息
  * GET /api/auth/me   （需登录）
+ * 成功：200 + { code: 0, data: { user } }
  */
 async function getMe(req, res) {
   try {
@@ -194,7 +205,8 @@ async function getMe(req, res) {
 /**
  * 更新个人信息
  * PUT /api/auth/me   （需登录）
- * body: { nickname?, avatar?, phone?, email?, student_id? }
+ * body: { nickname?, avatar?, phone?, email?, student_id? }（传哪个改哪个）
+ * 成功：200 + { code: 0, data: { user } }
  */
 async function updateMe(req, res) {
   try {
@@ -231,7 +243,7 @@ async function updateMe(req, res) {
       values.push(email || null);
     }
     if (student_id !== undefined) {
-      if (String(student_id).length > 30) {
+      if (student_id && String(student_id).length > 30) {
         return res.status(400).json({ code: 1001, message: '学号长度不能超过 30 个字符' });
       }
       fields.push('student_id = ?');
@@ -253,4 +265,44 @@ async function updateMe(req, res) {
   }
 }
 
-module.exports = { register, login, getMe, updateMe };
+/**
+ * 修改密码
+ * PUT /api/auth/password   （需登录）
+ * body: { oldPassword, newPassword }
+ * 成功：200 + { code: 0, message: '密码修改成功，请重新登录' }
+ */
+async function changePassword(req, res) {
+  try {
+    const { oldPassword, newPassword } = req.body || {};
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ code: 1001, message: '原密码和新密码不能为空' });
+    }
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({ code: 1001, message: '新密码长度不能少于 6 位' });
+    }
+    if (String(newPassword).length > PASSWORD_MAX) {
+      return res.status(400).json({ code: 1001, message: `新密码长度不能超过 ${PASSWORD_MAX} 位` });
+    }
+
+    const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [req.userId]);
+    if (rows.length === 0) {
+      return res.status(404).json({ code: 1003, message: '用户不存在' });
+    }
+
+    const matched = await bcrypt.compare(String(oldPassword), rows[0].password);
+    if (!matched) {
+      return res.status(401).json({ code: 1003, message: '原密码不正确' });
+    }
+
+    const hash = await bcrypt.hash(String(newPassword), 10);
+    await pool.query('UPDATE users SET password = ? WHERE id = ?', [hash, req.userId]);
+
+    res.json({ code: 0, message: '密码修改成功，请重新登录', data: null });
+  } catch (err) {
+    console.error('[changePassword] error:', err);
+    res.status(500).json({ code: 1005, message: '服务器内部错误' });
+  }
+}
+
+module.exports = { register, login, getMe, updateMe, changePassword };

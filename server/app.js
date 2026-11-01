@@ -40,4 +40,5 @@ app.listen(PORT, () => {
   console.log('   POST /api/auth/login     用户登录');
   console.log('   GET  /api/auth/me        获取当前用户信息（需登录）');
   console.log('   PUT  /api/auth/me        更新个人信息（需登录）');
+  console.log('   PUT  /api/auth/password  修改密码（需登录）');
 });
