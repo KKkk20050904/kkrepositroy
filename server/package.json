@@ -1,0 +1,29 @@
+{
+  "name": "campus-secondhand-trade-server",
+  "version": "1.0.0",
+  "description": "校园闲置物品交易小程序 - 后端服务（模块2：闲置商品发布、图片上传，feature/lisi-publish）",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "keywords": [
+    "campus",
+    "secondhand",
+    "uniapp",
+    "express",
+    "mysql"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

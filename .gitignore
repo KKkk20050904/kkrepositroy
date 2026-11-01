@@ -147,3 +147,14 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# uni-app / HBuilderX 构建产物
+unpackage/
+.hbuilderx/
+
+# 上传的图片（保留占位文件）
+**/uploads/*
+!**/uploads/.gitkeep
+
+# 压缩包
+*.zip
