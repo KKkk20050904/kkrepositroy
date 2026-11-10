@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#e02e24">
+  <meta name="description" content="拼多多风格个人中心：订单、资产、地址与常用功能。">
+  <title>个人中心 · 拼多多简单版</title>
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="profile">
+  <div class="app-shell">
+    <header class="profile-header">
+      <div class="profile-top">
+        <h1>个人中心</h1>
+        <button class="header-icon-btn" type="button" aria-label="设置" data-toast="设置功能为演示入口">
+          <svg class="icon" aria-hidden="true"><use href="images/icons.svg#settings"></use></svg>
+        </button>
+      </div>
+
+      <div class="profile-user">
+        <div class="avatar-wrap">
+          <img src="images/avatar.svg" alt="拼友_小满的头像" width="68" height="68">
+          <span class="avatar-badge" aria-hidden="true">V1</span>
+        </div>
+        <div class="profile-id">
+          <h2>拼友_小满</h2>
+          <p>ID 8823****21 · 已加入 326 天</p>
+        </div>
+        <button class="edit-btn" type="button" data-toast="编辑资料功能为演示入口">编辑资料</button>
+      </div>
+
+      <div class="profile-stats" aria-label="个人数据">
+        <div><b>12</b><span>收藏</span></div>
+        <div><b>3</b><span>关注店铺</span></div>
+        <div><b>5</b><span>优惠券</span></div>
+      </div>
+    </header>
+
+    <main class="page profile-page">
+      <section class="order-card" aria-labelledby="orderTitle">
+        <div class="card-head">
+          <h2 id="orderTitle">我的订单</h2>
+          <a href="#" data-toast="全部订单为演示入口">全部订单
+            <svg class="icon" aria-hidden="true"><use href="images/icons.svg#chevron-right"></use></svg>
+          </a>
+        </div>
+        <div class="order-grid">
+          <button class="order-item" type="button" data-toast="暂无待付款订单">
+            <span class="order-icon">
+              <svg class="icon" aria-hidden="true"><use href="images/icons.svg#order-pay"></use></svg>
+              <i class="order-badge">1</i>
+            </span>
+            <span>待付款</span>
+          </button>
+          <button class="order-item" type="button" data-toast="暂无待发货订单">
+            <span class="order-icon">
+              <svg class="icon" aria-hidden="true"><use href="images/icons.svg#order-ship"></use></svg>
+              <i class="order-badge">2</i>
+            </span>
+            <span>待发货</span>
+          </button>
+          <button class="order-item" type="button" data-toast="暂无待收货订单">
+            <span class="order-icon">
+              <svg class="icon" aria-hidden="true"><use href="images/icons.svg#order-receive"></use></svg>
+            </span>
+            <span>待收货</span>
+          </button>
+          <button class="order-item" type="button" data-toast="暂无退款或售后订单">
+            <span class="order-icon">
+              <svg class="icon" aria-hidden="true"><use href="images/icons.svg#order-refund"></use></svg>
+            </span>
+            <span>退款 / 售后</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="asset-card" aria-labelledby="assetTitle">
+        <div class="card-head">
+          <h2 id="assetTitle">我的资产</h2>
+          <span class="card-sub">每一分都省得明白</span>
+        </div>
+        <div class="asset-grid">
+          <button type="button" data-toast="你有 5 张优惠券，快去逛逛吧">
+            <b>5</b>
+            <span>优惠券</span>
+          </button>
+          <button type="button" data-toast="红包余额 ¥8.80">
+            <b><small>¥</small>8.8</b>
+            <span>红包</span>
+          </button>
+          <button type="button" data-toast="多多钱包余额 ¥36.50">
+            <b><small>¥</small>36.5</b>
+            <span>多多钱包</span>
+          </button>
+        </div>
+      </section>
+
+      <button class="member-banner" type="button" data-toast="省钱月卡为演示入口">
+        <span class="member-icon" aria-hidden="true">♛</span>
+        <span class="member-copy">
+          <b>省钱月卡</b>
+          <small>预计每月可省 ¥30，本单已省 ¥6.8</small>
+        </span>
+        <span class="member-cta">去开通</span>
+      </button>
+
+      <section class="menu-card" aria-label="常用功能">
+        <button class="menu-item" type="button" data-toast="地址管理为演示入口">
+          <span class="menu-icon icon-address"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#address"></use></svg></span>
+          <span class="menu-label">收货地址</span>
+          <span class="menu-note">2 个地址</span>
+          <svg class="icon menu-arrow" aria-hidden="true"><use href="images/icons.svg#chevron-right"></use></svg>
+        </button>
+        <button class="menu-item" type="button" data-toast="收藏夹里有 12 件宝贝">
+          <span class="menu-icon icon-heart"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#heart"></use></svg></span>
+          <span class="menu-label">我的收藏</span>
+          <span class="menu-note">12 件</span>
+          <svg class="icon menu-arrow" aria-hidden="true"><use href="images/icons.svg#chevron-right"></use></svg>
+        </button>
+        <button class="menu-item" type="button" data-toast="浏览记录为演示入口">
+          <span class="menu-icon icon-clock">
+            <svg class="icon" aria-hidden="true"><use href="images/icons.svg#order-refund"></use></svg>
+          </span>
+          <span class="menu-label">浏览记录</span>
+          <span class="menu-note">今天看过 8 件</span>
+          <svg class="icon menu-arrow" aria-hidden="true"><use href="images/icons.svg#chevron-right"></use></svg>
+        </button>
+        <button class="menu-item" type="button" data-toast="客服小拼为你服务：400-888-8888">
+          <span class="menu-icon icon-service"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#service"></use></svg></span>
+          <span class="menu-label">官方客服</span>
+          <span class="menu-note">7×24 小时</span>
+          <svg class="icon menu-arrow" aria-hidden="true"><use href="images/icons.svg#chevron-right"></use></svg>
+        </button>
+        <button class="menu-item" type="button" data-toast="设置功能为演示入口">
+          <span class="menu-icon icon-settings"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#settings"></use></svg></span>
+          <span class="menu-label">设置</span>
+          <span class="menu-note">隐私 · 通知</span>
+          <svg class="icon menu-arrow" aria-hidden="true"><use href="images/icons.svg#chevron-right"></use></svg>
+        </button>
+        <button class="menu-item" type="button" data-toast="拼多多简单版 v1.0.0 · 仅用于学习演示">
+          <span class="menu-icon icon-info"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#info"></use></svg></span>
+          <span class="menu-label">关于简单版</span>
+          <span class="menu-note">v1.0.0</span>
+          <svg class="icon menu-arrow" aria-hidden="true"><use href="images/icons.svg#chevron-right"></use></svg>
+        </button>
+      </section>
+
+      <button class="logout-btn" type="button" data-toast="演示账号，暂不支持退出">
+        <svg class="icon" aria-hidden="true"><use href="images/icons.svg#logout"></use></svg>
+        退出登录
+      </button>
+
+      <footer class="profile-footer">
+        <p>拼多多 · 简单版</p>
+        <span>Made with ♥ for learning</span>
+      </footer>
+    </main>
+
+    <nav class="tabbar" aria-label="主导航">
+      <a class="tab-item" href="index.html">
+        <span class="tab-icon"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#home"></use></svg></span>
+        <span>首页</span>
+      </a>
+      <a class="tab-item" href="category.html">
+        <span class="tab-icon"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#grid"></use></svg></span>
+        <span>分类</span>
+      </a>
+      <a class="tab-item active" href="profile.html" aria-current="page">
+        <span class="tab-icon"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#user"></use></svg></span>
+        <span>个人中心</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="js/catalog.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

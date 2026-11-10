@@ -1,35 +1,58 @@
 /**
- * 登录校验中间件（JWT）
+ * 登录鉴权中间件（全项目共用 —— 合并版）
  *
- * 对接说明：本模块依赖"用户登录注册"模块（张三，feature/zhangsan-auth）。
- * - 张三的登录接口签发 JWT 时，使用与本项目 .env 中 JWT_SECRET 相同的密钥；
- * - 前端登录后把 token 存起来，请求时在请求头携带 Authorization: Bearer <token>；
- * - 通过校验后，req.user 为 { id, username, ... }，即当前登录用户。
+ * 对接约定（与登录注册模块保持一致）：
+ * - 登录接口签发 JWT，payload 为 { userId, username }，密钥取 .env 的 JWT_SECRET；
+ * - 前端请求头携带 Authorization: Bearer <token>；
+ * - 校验通过后：req.userId 为当前用户 ID，req.user 为完整 payload；
+ * - 登录态失效统一返回 HTTP 401 + code 1004（前端 request.js 据此自动清理登录态并跳登录页）。
  *
- * 联调说明：登录模块完成前，可以先临时注释掉路由里的 auth 中间件，
- * 并在请求体中传 userId 指定发布者，方便单独调试本模块。
+ * 两个导出：
+ * - authRequired：必须登录（发布商品、上传图片、收藏、私信等）
+ * - optionalAuth：可选登录（商品详情等公开接口，带了 token 就识别用户，带了无效 token 按未登录处理）
  */
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'campus_secondhand_secret_key';
 
-function auth(req, res, next) {
-  // 兼容两种携带方式：Authorization: Bearer xxx 或 自定义请求头 token
-  const header = req.headers['authorization'] || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : (req.headers['token'] || '');
+function extractToken(req) {
+  const header = req.headers.authorization || '';
+  return header.startsWith('Bearer ') ? header.slice(7) : '';
+}
 
+function isValidPayload(payload) {
+  return payload && Number.isSafeInteger(payload.userId) && payload.userId > 0;
+}
+
+function authRequired(req, res, next) {
+  const token = extractToken(req);
   if (!token) {
-    return res.status(401).json({ code: 401, message: '未登录或登录已过期' });
+    return res.status(401).json({ code: 1004, message: '未登录或登录已过期' });
   }
-
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (!isValidPayload(payload)) throw new Error('无效的登录凭证');
+    req.userId = payload.userId;
+    req.user = payload;
+    return next();
   } catch (err) {
-    return res.status(401).json({ code: 401, message: '登录状态无效，请重新登录' });
+    return res.status(401).json({ code: 1004, message: '未登录或登录已过期' });
   }
 }
 
-module.exports = auth;
+function optionalAuth(req, res, next) {
+  const token = extractToken(req);
+  if (!token) return next();
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    if (isValidPayload(payload)) {
+      req.userId = payload.userId;
+      req.user = payload;
+    }
+  } catch (err) {
+    // 无效 token 按未登录处理，不阻塞公开接口
+  }
+  return next();
+}
+
+module.exports = { authRequired, optionalAuth };

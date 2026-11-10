@@ -41,10 +41,11 @@
       <text>{{ serverOk ? '后端服务已连接，可以发布商品' : '后端服务未连接（请先运行 一键启动.bat）' }}</text>
     </view>
 
-    <!-- 发布入口 -->
+    <!-- 发布 / 逛逛 入口 -->
     <button class="publish-btn" @click="goPublish">发布闲置商品</button>
+    <button class="publish-btn browse-btn" @click="goGoodsList">逛逛校园闲置</button>
 
-    <view class="footer">课程设计小组项目 · 成员2 负责发布模块</view>
+    <view class="footer">课程设计小组项目 · 校园闲置物品交易</view>
   </view>
 </template>
 
@@ -76,6 +77,9 @@ export default {
     },
     goPublish() {
       uni.navigateTo({ url: '/pages/publish/publish' });
+    },
+    goGoodsList() {
+      uni.navigateTo({ url: '/pages/goods/list' });
     }
   }
 };
@@ -207,6 +211,13 @@ export default {
   color: #fff;
   border-radius: 44rpx;
   font-size: 34rpx;
+}
+
+.browse-btn {
+  margin-top: 20rpx;
+  background: #ffffff;
+  color: #2b85ff;
+  border: 2rpx solid #2b85ff;
 }
 
 .footer {

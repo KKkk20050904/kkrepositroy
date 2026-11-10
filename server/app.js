@@ -1,6 +1,12 @@
 /**
- * 校园闲置物品交易小程序 - 后端服务入口
- * 模块2：闲置商品发布、图片上传（feature/lisi-publish）
+ * 校园闲置物品交易小程序 - 后端服务入口（合并版）
+ *
+ * 整合各成员模块：
+ *   - 登录注册 / 个人信息（张三）  /api/auth
+ *   - 商品发布 / 图片上传（李四）  POST /api/goods、POST /api/upload
+ *   - 商品列表 / 搜索 / 详情（王五、赵六） GET /api/goods、GET /api/goods/:id、GET /api/category
+ *   - 收藏（赵六）                /api/collect
+ *   - 私信（钱七）                /api/msg
  *
  * 启动步骤：
  *   1. 复制 .env.example 为 .env，填写自己的数据库账号密码
@@ -18,7 +24,10 @@ process.on('unhandledRejection', (reason) => {
   console.error('[unhandledRejection]', reason);
 });
 
+const authRoutes = require('./routes/auth');
 const goodsRoutes = require('./routes/goods');
+const msgRoutes = require('./routes/msg');
+const collectRoutes = require('./routes/collect');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,8 +40,11 @@ app.use(express.urlencoded({ extended: true }));
 // 上传图片的静态访问地址：http://localhost:3000/uploads/xxx.jpg
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 业务路由（合并到团队仓库后，其他成员的路由在此继续追加）
-app.use('/api', goodsRoutes);
+// ==================== 各模块路由 ====================
+app.use('/api/auth', authRoutes);      // 张三：登录注册、个人信息
+app.use('/api/msg', msgRoutes);        // 钱七：私信
+app.use('/api/collect', collectRoutes); // 赵六：收藏
+app.use('/api', goodsRoutes);          // 李四/王五/赵六：/goods、/goods/:id、/upload、/category
 
 // 健康检查
 app.get('/api/health', (req, res) => {
@@ -41,16 +53,16 @@ app.get('/api/health', (req, res) => {
 
 // 404 兜底
 app.use((req, res) => {
-  res.status(404).json({ code: 404, message: '接口不存在' });
+  res.status(404).json({ code: 1006, message: '接口不存在' });
 });
 
 // 统一错误处理
 app.use((err, req, res, next) => {
   console.error('[error]', err);
-  const status = err.status || 500;
-  res.status(status).json({ code: status, message: err.message || '服务器内部错误' });
+  res.status(500).json({ code: 1005, message: '服务器内部错误' });
 });
 
 app.listen(PORT, () => {
   console.log(`校园闲置交易后端已启动：http://localhost:${PORT}`);
+  console.log('接口前缀：/api  健康检查：GET /api/health');
 });

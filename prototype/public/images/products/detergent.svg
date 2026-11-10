@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="薰衣草洗衣液">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f5f1ff"/>
+      <stop offset="1" stop-color="#e7dffb"/>
+    </linearGradient>
+    <linearGradient id="bottle" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ad92e0"/>
+      <stop offset=".55" stop-color="#8b6bc8"/>
+      <stop offset="1" stop-color="#6f50ae"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#64469f" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="326" cy="78" r="68" fill="#ffffff" opacity=".45"/>
+  <circle cx="68" cy="330" r="54" fill="#ffffff" opacity=".28"/>
+  <ellipse cx="200" cy="338" rx="86" ry="14" fill="#64469f" opacity=".14"/>
+  <g filter="url(#shadow)">
+    <path d="M151 128c0-11 7-19 18-21h62c11 2 18 10 18 21v172c0 14-10 24-24 24h-50c-14 0-24-10-24-24Z" fill="url(#bottle)"/>
+    <rect x="165" y="86" width="70" height="35" rx="10" fill="#5b418f"/>
+    <rect x="172" y="94" width="56" height="8" rx="4" fill="#8067ac"/>
+    <path d="M151 156h98" fill="none" stroke="#cbb8f0" stroke-width="8" opacity=".55"/>
+    <rect x="158" y="174" width="16" height="110" rx="8" fill="#ffffff" opacity=".2"/>
+    <rect x="158" y="196" width="84" height="88" rx="12" fill="#fffdf8"/>
+    <path d="M200 208c11 0 19 9 19 20 0 8-4 14-11 17h-16c-7-3-11-9-11-17 0-11 8-20 19-20Z" fill="#b49ae1" opacity=".5"/>
+    <path d="M200 232v28" fill="none" stroke="#6f50ae" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="191" cy="238" r="5" fill="#8b6bc8"/>
+    <circle cx="209" cy="246" r="5" fill="#8b6bc8"/>
+    <circle cx="196" cy="254" r="4" fill="#a98bd8"/>
+    <path d="M187 268h26" fill="none" stroke="#d7c9ef" stroke-width="3" stroke-linecap="round"/>
+    <path d="M159 300h82" fill="none" stroke="#5b418f" stroke-width="3" stroke-linecap="round" opacity=".4"/>
+  </g>
+</svg>

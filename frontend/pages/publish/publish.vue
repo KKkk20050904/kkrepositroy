@@ -102,7 +102,7 @@
 
 <script>
 import { publishGoods, getCategories } from '../../api/goods.js';
-import { uploadImage, request } from '../../api/request.js';
+import { uploadImage } from '../../api/request.js';
 
 // 本地兜底分类（后端分类接口未就绪时使用，与 sql/init.sql 种子数据一致）
 const FALLBACK_CATEGORIES = [
@@ -138,24 +138,15 @@ export default {
     }
   },
   onLoad() {
-    this.ensureDevToken();
+    // 发布需要登录：未登录时引导用户去登录页
+    if (!uni.getStorageSync('token')) {
+      uni.showToast({ title: '请先登录', icon: 'none' });
+      setTimeout(() => uni.navigateTo({ url: '/pages/login/login' }), 500);
+      return;
+    }
     this.loadCategories();
   },
   methods: {
-    // 联调辅助：登录模块（张三）完成前，自动获取测试 token 存入本地，
-    // 保证发布功能可直接使用；登录模块接入后删除本方法及其调用即可
-    async ensureDevToken() {
-      try {
-        if (!uni.getStorageSync('token')) {
-          const data = await request({ url: '/dev/token', method: 'GET' });
-          uni.setStorageSync('token', data.token);
-          console.log('已自动获取联调 token');
-        }
-      } catch (e) {
-        console.log('获取联调 token 失败（确认后端已启动）', e);
-      }
-    },
-
     // 加载分类：优先请求后端接口，失败使用本地兜底
     async loadCategories() {
       try {
@@ -207,6 +198,11 @@ export default {
     // 提交发布：先逐张上传图片，再提交商品信息
     async submit() {
       if (this.submitting) return;
+      if (!uni.getStorageSync('token')) {
+        uni.showToast({ title: '请先登录', icon: 'none' });
+        setTimeout(() => uni.navigateTo({ url: '/pages/login/login' }), 500);
+        return;
+      }
       const errMsg = this.validate();
       if (errMsg) {
         uni.showToast({ title: errMsg, icon: 'none' });

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="复古小方包">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbf4e9"/>
+      <stop offset="1" stop-color="#f1dfc8"/>
+    </linearGradient>
+    <linearGradient id="leather" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ddb184"/>
+      <stop offset="1" stop-color="#b97c4f"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="13" flood-color="#7a4a29" flood-opacity=".2"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" fill="url(#bg)"/>
+  <circle cx="72" cy="82" r="62" fill="#ffffff" opacity=".45"/>
+  <circle cx="338" cy="320" r="74" fill="#ffffff" opacity=".25"/>
+  <ellipse cx="201" cy="334" rx="108" ry="15" fill="#7a4a29" opacity=".1"/>
+  <g filter="url(#shadow)">
+    <path d="M150 192c0-57 100-57 100 0" fill="none" stroke="#8f5b39" stroke-width="15" stroke-linecap="round"/>
+    <path d="M150 192c0-57 100-57 100 0" fill="none" stroke="#b87d53" stroke-width="6" stroke-linecap="round"/>
+    <path d="M104 190c0-12 9-21 21-21h150c12 0 21 9 21 21v119c0 12-9 21-21 21H125c-12 0-21-9-21-21Z" fill="url(#leather)"/>
+    <path d="M104 200c0-17 13-31 30-31h132c17 0 30 14 30 31v42c-62 13-128 13-192 0Z" fill="#c88e60"/>
+    <path d="M104 238c61 13 130 13 192 0" fill="none" stroke="#a76c43" stroke-width="3"/>
+    <path d="M118 263c55 10 113 10 168 0" fill="none" stroke="#f3d8ba" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 6" opacity=".65"/>
+    <circle cx="200" cy="246" r="17" fill="#f3cf88" stroke="#d8ad5c" stroke-width="3"/>
+    <path d="M195 246h10M200 241v10" fill="none" stroke="#9b7331" stroke-width="3" stroke-linecap="round"/>
+    <path d="M132 206c18 5 39 7 60 7" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity=".22"/>
+  </g>
+</svg>

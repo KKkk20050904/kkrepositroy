@@ -3,9 +3,9 @@
  * 运行：node test-api.js
  *
  * 说明：
- *   - 自动生成测试 token（与 .env 的 JWT_SECRET 一致）
+ *   - 自动生成测试 token（与 .env 的 JWT_SECRET 一致，payload 与登录模块一致：{ userId, username }）
  *   - 上传一张测试图片，再发布一件测试商品
- *   - 需要先启动 MySQL 并执行 sql/init.sql，然后 node app.js 启动服务
+ *   - 需要先启动 MySQL 并执行 sql/init.sql（需存在 id=1 的用户，或先调注册接口），然后 node app.js 启动服务
  */
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
@@ -22,7 +22,7 @@ const PNG_BASE64 =
 const tmpImg = path.join(__dirname, 'test-upload.png');
 fs.writeFileSync(tmpImg, Buffer.from(PNG_BASE64, 'base64'));
 
-const token = jwt.sign({ id: 1, username: 'test_user' }, JWT_SECRET);
+const token = jwt.sign({ userId: 1, username: 'test_user' }, JWT_SECRET);
 
 async function main() {
   // 1. 上传图片

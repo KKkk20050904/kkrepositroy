@@ -1,5 +1,6 @@
 /**
- * 商品发布与图片上传控制器（模块2：闲置商品发布、图片上传）
+ * 商品发布与图片上传控制器（模块2：闲置商品发布、图片上传 —— 合并版）
+ * 已对接登录模块：发布者 ID 从登录态 req.userId 获取。
  */
 const pool = require('../config/db');
 
@@ -16,29 +17,27 @@ const pool = require('../config/db');
  * }
  */
 async function createGoods(req, res, next) {
-  const { title, description = '', price, originalPrice, categoryId, images = [] } = req.body;
+  const { title, description = '', price, originalPrice, categoryId, images = [] } = req.body || {};
 
   // ---------- 参数校验 ----------
   if (!title || !title.trim()) {
-    return res.status(400).json({ code: 400, message: '商品标题不能为空' });
+    return res.status(400).json({ code: 1001, message: '商品标题不能为空' });
   }
   if (title.trim().length > 50) {
-    return res.status(400).json({ code: 400, message: '商品标题不能超过50个字' });
+    return res.status(400).json({ code: 1001, message: '商品标题不能超过50个字' });
   }
-  if (price === undefined || price === null || price === '' || Number(price) <= 0) {
-    return res.status(400).json({ code: 400, message: '请填写正确的商品价格' });
+  if (price === undefined || price === null || price === '' || Number(price) <= 0 || !Number.isFinite(Number(price))) {
+    return res.status(400).json({ code: 1001, message: '请填写正确的商品价格' });
   }
   if (!Array.isArray(images) || images.length > 9) {
-    return res.status(400).json({ code: 400, message: '商品图片最多上传9张' });
+    return res.status(400).json({ code: 1001, message: '商品图片最多上传9张' });
   }
 
   // 过滤空字符串，避免写入无效图片记录
   const imageList = images.filter((u) => typeof u === 'string' && u.trim().length > 0);
-
-  // 发布者ID：优先取登录态；登录模块接入前，联调时可传 userId
-  const userId = (req.user && req.user.id) || req.body.userId;
+  const userId = req.userId;
   if (!userId) {
-    return res.status(400).json({ code: 400, message: '缺少发布者信息，请先登录' });
+    return res.status(401).json({ code: 1004, message: '缺少发布者信息，请先登录' });
   }
 
   // 注意：获取连接与事务操作必须包在 try/catch 中，
@@ -93,7 +92,7 @@ async function createGoods(req, res, next) {
 function uploadImages(req, res) {
   const files = req.files || [];
   if (files.length === 0) {
-    return res.status(400).json({ code: 400, message: '请选择要上传的图片' });
+    return res.status(400).json({ code: 1001, message: '请选择要上传的图片' });
   }
   const urls = files.map((f) => `/uploads/${f.filename}`);
   res.json({ code: 0, message: '上传成功', data: { urls } });

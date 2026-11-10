@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#e02e24">
+  <meta name="description" content="拼多多风格移动端 Demo：首页、分类、个人中心，简单好上手。">
+  <title>拼多多 · 简单版</title>
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="home">
+  <div class="app-shell">
+    <header class="home-header">
+      <div class="header-top">
+        <a class="location-chip" href="#" data-toast="定位功能为演示入口">
+          <svg class="icon" aria-hidden="true"><use href="images/icons.svg#location"></use></svg>
+          <span>上海</span>
+          <span class="location-arrow">▾</span>
+        </a>
+        <div class="header-actions">
+          <button class="header-icon-btn" type="button" aria-label="消息" data-toast="暂无新消息">
+            <svg class="icon" aria-hidden="true"><use href="images/icons.svg#message"></use></svg>
+            <span class="dot-badge" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+
+      <button class="search-trigger" type="button" data-open-search aria-label="搜索商品">
+        <svg class="icon" aria-hidden="true"><use href="images/icons.svg#search"></use></svg>
+        <span class="search-placeholder">百亿补贴 · 搜索你想买的商品</span>
+        <span class="search-cta">搜索</span>
+      </button>
+    </header>
+
+    <main class="page home-page">
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero-copy">
+          <span class="hero-eyebrow">百亿补贴</span>
+          <h1 id="heroTitle">真香好物<br><em>低至 5 折</em></h1>
+          <p>品牌正品 · 天天低价</p>
+          <a class="hero-cta" href="#feed">
+            立即抢购
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-product">
+            <img src="images/products/headphones.svg" alt="">
+            <span class="hero-product-tag">官方补贴</span>
+          </div>
+          <div class="hero-price"><small>¥</small>39.9<span>起</span></div>
+          <span class="hero-spark spark-one">✦</span>
+          <span class="hero-spark spark-two">✦</span>
+        </div>
+      </section>
+
+      <div class="notice-bar" aria-label="平台公告">
+        <span class="notice-label">公告</span>
+        <div class="notice-viewport">
+          <span class="notice-text" id="noticeText">百亿补贴 · 品牌正品天天低价</span>
+        </div>
+        <span class="notice-arrow" aria-hidden="true">›</span>
+      </div>
+
+      <section class="quick-nav" id="quickNav" aria-label="分类快捷入口"></section>
+
+      <section class="flash-card" aria-labelledby="flashTitle">
+        <div class="section-head flash-head">
+          <div class="section-title-wrap">
+            <span class="flash-bolt" aria-hidden="true">⚡</span>
+            <h2 id="flashTitle">限时秒杀</h2>
+            <div class="countdown" aria-label="距离本场结束">
+              <b id="countHour">02</b><i>:</i><b id="countMinute">18</b><i>:</i><b id="countSecond">36</b>
+            </div>
+          </div>
+          <a class="section-more" href="#feed">更多 <span aria-hidden="true">›</span></a>
+        </div>
+        <div class="flash-grid" id="flashGrid"></div>
+      </section>
+
+      <section class="feed" id="feed" aria-labelledby="feedTitle">
+        <div class="feed-head">
+          <div>
+            <h2 id="feedTitle">猜你喜欢</h2>
+            <p>根据你的浏览，为你认真挑选</p>
+          </div>
+          <span class="feed-pill">为你精选</span>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+      </section>
+
+      <footer class="page-footer">
+        <span>已经到底啦</span>
+        <a href="category.html">去分类逛逛 <span aria-hidden="true">›</span></a>
+      </footer>
+    </main>
+
+    <nav class="tabbar" aria-label="主导航">
+      <a class="tab-item active" href="index.html" aria-current="page">
+        <span class="tab-icon"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#home"></use></svg></span>
+        <span>首页</span>
+      </a>
+      <a class="tab-item" href="category.html">
+        <span class="tab-icon"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#grid"></use></svg></span>
+        <span>分类</span>
+      </a>
+      <a class="tab-item" href="profile.html">
+        <span class="tab-icon"><svg class="icon" aria-hidden="true"><use href="images/icons.svg#user"></use></svg></span>
+        <span>个人中心</span>
+      </a>
+    </nav>
+  </div>
+
+  <script src="js/catalog.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
