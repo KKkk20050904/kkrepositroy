@@ -59,6 +59,18 @@ app.use((req, res) => {
 // 统一错误处理
 app.use((err, req, res, next) => {
   console.error('[error]', err);
+
+  // 图片上传相关错误：给出可读的提示，而不是笼统的 500
+  if (err && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ code: 1001, message: '图片太大：单张不能超过 10MB，请换一张或压缩后再试' });
+  }
+  if (err && err.name === 'MulterError') {
+    return res.status(400).json({ code: 1001, message: '图片上传失败：' + err.message });
+  }
+  if (err && err.message && /仅支持 JPG/.test(err.message)) {
+    return res.status(400).json({ code: 1001, message: err.message });
+  }
+
   res.status(500).json({ code: 1005, message: '服务器内部错误' });
 });
 

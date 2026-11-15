@@ -1,11 +1,13 @@
 /**
  * 图片上传中间件（基于 multer）
  * - 存储位置：server/uploads/
- * - 限制：单张不超过 5MB，最多 9 张，仅支持 jpg/jpeg/png/gif/webp
+ * - 限制：单张不超过 10MB，最多 9 张，仅支持 jpg/jpeg/png/gif/webp
  */
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 单张图片最大 10MB
 
 const uploadDir = path.join(__dirname, '..', 'uploads');
 
@@ -37,7 +39,8 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 单张图片最大 5MB
+  limits: { fileSize: MAX_FILE_SIZE } // 单张图片最大 10MB
 });
 
 module.exports = upload;
+module.exports.MAX_FILE_SIZE = MAX_FILE_SIZE;

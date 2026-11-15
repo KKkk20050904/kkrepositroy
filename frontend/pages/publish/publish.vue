@@ -2,7 +2,7 @@
   <view class="page">
     <!-- 图片上传区 -->
     <view class="section">
-      <view class="section-title">商品图片（最多 9 张，第一张为封面）</view>
+      <view class="section-title">商品图片（最多 9 张，第一张为封面，单张 ≤10MB）</view>
       <view class="image-grid">
         <view class="image-item" v-for="(img, index) in imageList" :key="index">
           <image class="image" :src="img" mode="aspectFill" @click="previewImage(index)" />
