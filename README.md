@@ -70,7 +70,7 @@ node scripts/doctor.cjs        # ① 环境体检：缺什么会直接告诉你
 node scripts/setup-db.cjs      # ② 建库建表 + 分类种子（自动生成 server/.env）
 cd server && node app.js       # ③ 启动后端
 node scripts/smoke-test.cjs    # ④ 自测：21 项接口检查
-node scripts/seed-goods.cjs    # ⑤ 可选：造 6 件示例商品
+node scripts/seed-goods.cjs    # ⑤ 可选：造 12 件示例商品
 ```
 
 Windows 上更省事：双击仓库根目录的 `启动模块2.bat`，它会把上面 ①~④ 依次做完。
