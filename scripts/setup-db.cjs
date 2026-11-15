@@ -6,6 +6,7 @@
  *   1. 没有 server/.env 就用模板生成一份（默认 root / 123456，与课程环境一致）
  *   2. 连上 MySQL，建库 campus_secondhand
  *   3. 执行 server/sql/init.sql 建表 + 分类种子
+ *   3.5 导入 server/sql/seed-goods.sql（12 件示例商品，有就导）
  *   4. 去掉重复的分类（init.sql 的种子不是幂等的，跑第二遍会出现重复行）
  *
  * 用法（在仓库根目录）：
@@ -95,6 +96,13 @@ function readEnv() {
   const sql = fs.readFileSync(SQL_PATH, 'utf8');
   await conn.query(sql);
   log('· 已执行 server/sql/init.sql（建表 + 分类种子）');
+
+  // 示例商品（12 件）：让“建完库首页就有东西”，不必再跑 seed-goods.cjs
+  const seedPath = path.join(SERVER, 'sql', 'seed-goods.sql');
+  if (fs.existsSync(seedPath)) {
+    await conn.query(fs.readFileSync(seedPath, 'utf8'));
+    log('· 已导入示例商品 server/sql/seed-goods.sql');
+  }
 
   // ---------- 4. 清理重复分类 ----------
   const [dup] = await conn.query(

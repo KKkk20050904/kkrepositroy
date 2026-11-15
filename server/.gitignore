@@ -6,6 +6,8 @@ node_modules/
 
 # 上传的图片（保留 .gitkeep）
 uploads/*
+!uploads/seed/
+!uploads/seed/*
 !uploads/.gitkeep
 
 # 自测脚本生成的临时图片

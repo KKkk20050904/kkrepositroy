@@ -155,6 +155,9 @@ unpackage/
 # 上传的图片（保留占位文件）
 **/uploads/*
 !**/uploads/.gitkeep
+# 示例商品图随仓库走（seed 目录）
+!server/uploads/seed/
+!server/uploads/seed/*
 
 # 压缩包
 *.zip
