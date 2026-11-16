@@ -40,19 +40,19 @@
     </view>
 
     <!-- 仅发布者本人可见：删除商品 -->
-    <button v-if="canDelete" class="delete-btn" @click="deleteGoods">🗑 删除这件商品</button>
+    <button v-if="isOwner" class="delete-btn" @click="deleteGoods">🗑 删除这件商品</button>
   </view>
 </template>
 
 <script>
-import { request } from '../../common/request.js';
-import { getCurrentUser } from '../../common/accounts.js';
+import { request, getUser } from '../../common/request.js';
 import { buildChatUrl } from '../../common/chat.js';
 
 export default {
   data() {
     return {
       goodsId: null,
+      currentUserId: 0,
       detail: { isCollect: false }
     };
   },
@@ -63,15 +63,9 @@ export default {
       if (Array.isArray(imgs) && imgs.length > 0) return imgs;
       return this.detail && this.detail.image ? [this.detail.image] : [];
     },
-    // 当前登录用户是否为该商品的发布者
     isOwner() {
-      const user = getCurrentUser();
-      if (!user || !this.detail) return false;
-      return Number(user.id) === Number(this.detail.user_id);
-    },
-    // 仅发布者本人可见删除按钮
-    canDelete() {
-      return this.isOwner;
+      return Boolean(this.detail && this.detail.user_id &&
+        Number(this.detail.user_id) === this.currentUserId);
     },
     sellerCaption() {
       if (!this.detail || !this.detail.user_id) return '平台商品 · 暂不支持私信';
@@ -80,6 +74,8 @@ export default {
   },
   onLoad(options) {
     this.goodsId = options.id;
+    const user = getUser();
+    this.currentUserId = Number(user && user.id) || 0;
     this.getDetail();
   },
   methods: {
@@ -318,13 +314,15 @@ export default {
 }
 .delete-btn {
   margin-top: 24rpx;
+  width: 100%;
+  padding: 20rpx;
+  border-radius: 12rpx;
   background: #fff;
   color: #e64340;
   border: 2rpx solid #f3c0be;
   text-align: center;
-  padding: 20rpx;
-  border-radius: 12rpx;
   font-size: 30rpx;
+  line-height: 1.8;
 }
 .delete-btn::after {
   border: none;
