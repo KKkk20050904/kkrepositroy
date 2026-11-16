@@ -53,14 +53,17 @@
     <button class="publish-btn" @click="goPublish">发布闲置商品</button>
     <button class="publish-btn browse-btn" @click="goGoodsList">逛逛校园闲置</button>
 
-    <!-- 消息 / 收藏 入口 -->
+    <!-- 消息 / 收藏 / 购买申请 入口 -->
     <view class="msg-bar">
       <button class="msg-btn" @click="goChatList">
         <text>💬 消息</text>
         <view v-if="unreadTotal > 0" class="unread-badge">{{ unreadTotal > 99 ? '99+' : unreadTotal }}</view>
       </button>
       <button class="msg-btn" @click="goMyCollect">
-        <text>⭐ 我的收藏</text>
+        <text>⭐ 收藏</text>
+      </button>
+      <button class="msg-btn" @click="goPurchase">
+        <text>🛒 购买申请</text>
       </button>
     </view>
 
@@ -138,6 +141,9 @@ export default {
     },
     goMyCollect() {
       uni.navigateTo({ url: '/pages/my-collect/my-collect' });
+    },
+    goPurchase() {
+      uni.navigateTo({ url: '/pages/purchase/list' });
     },
     goPublish() {
       uni.navigateTo({ url: '/pages/publish/publish' });

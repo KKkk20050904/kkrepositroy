@@ -47,6 +47,13 @@
       }
     },
     {
+      "path": "pages/purchase/list",
+      "style": {
+        "navigationBarTitleText": "购买申请",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
       "path": "pages/chat/list",
       "style": {
         "navigationBarTitleText": "我的消息",

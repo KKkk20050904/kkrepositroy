@@ -105,6 +105,23 @@ CREATE TABLE IF NOT EXISTS `collect` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品收藏表';
 
 -- ------------------------------------------------------------
+-- 购买申请表（线下交易意向确认：买家发起，卖家同意/拒绝）
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `purchase_requests` (
+  `id`          INT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '申请ID',
+  `goods_id`    INT UNSIGNED NOT NULL                COMMENT '商品ID',
+  `buyer_id`    INT UNSIGNED NOT NULL                COMMENT '买家ID',
+  `seller_id`   INT UNSIGNED NOT NULL                COMMENT '卖家ID',
+  `status`      TINYINT      NOT NULL DEFAULT 0      COMMENT '0待处理 1已同意 2已拒绝',
+  `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发起时间',
+  `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_pr_goods` (`goods_id`),
+  KEY `idx_pr_buyer` (`buyer_id`),
+  KEY `idx_pr_seller` (`seller_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='购买申请（线下交易确认）';
+
+-- ------------------------------------------------------------
 -- 种子数据：商品分类
 -- ------------------------------------------------------------
 INSERT INTO `category` (`name`, `sort_order`) VALUES

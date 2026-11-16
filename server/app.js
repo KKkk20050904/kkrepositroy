@@ -28,6 +28,7 @@ const authRoutes = require('./routes/auth');
 const goodsRoutes = require('./routes/goods');
 const msgRoutes = require('./routes/msg');
 const collectRoutes = require('./routes/collect');
+const purchaseRoutes = require('./routes/purchase');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +45,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);      // 张三：登录注册、个人信息
 app.use('/api/msg', msgRoutes);        // 钱七：私信
 app.use('/api/collect', collectRoutes); // 赵六：收藏
+app.use('/api/purchase', purchaseRoutes); // 购买申请（线下交易确认）
 app.use('/api', goodsRoutes);          // 李四/王五/赵六：/goods、/goods/:id、/upload、/category
 
 // 健康检查

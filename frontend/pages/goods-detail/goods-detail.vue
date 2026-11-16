@@ -39,6 +39,21 @@
       <button v-if="detail.user_id && !isOwner" class="chat-btn" @click="goChat">💬 联系卖家</button>
     </view>
 
+    <!-- 买家：确认购买（线下交易意向，卖家确认后线下见面付款） -->
+    <view v-if="detail.user_id && !isOwner" class="purchase-row">
+      <button
+        class="purchase-btn"
+        :disabled="purchaseState === 'pending' || purchaseState === 'accepted'"
+        @click="createPurchaseRequest"
+      >
+        {{ purchaseButtonText }}
+      </button>
+      <text v-if="purchaseState === 'pending'" class="purchase-tip">已向卖家发起购买申请，等待确认</text>
+      <text v-else-if="purchaseState === 'accepted'" class="purchase-tip ok">卖家已同意，请与卖家约好时间地点线下验货付款</text>
+      <text v-else-if="purchaseState === 'rejected'" class="purchase-tip muted">卖家拒绝了申请，可再次发起或私信沟通</text>
+      <text v-else class="purchase-tip muted">线下见面验货付款，平台不收取任何费用</text>
+    </view>
+
     <!-- 仅发布者本人可见：删除商品 -->
     <button v-if="isOwner" class="delete-btn" @click="deleteGoods">🗑 删除这件商品</button>
   </view>
@@ -53,6 +68,7 @@ export default {
     return {
       goodsId: null,
       currentUserId: 0,
+      purchaseRequest: null,
       detail: { isCollect: false }
     };
   },
@@ -70,6 +86,18 @@ export default {
     sellerCaption() {
       if (!this.detail || !this.detail.user_id) return '平台商品 · 暂不支持私信';
       return this.isOwner ? '这是你发布的商品' : '校园卖家 · 可私信咨询';
+    },
+    // 我（买家）对该商品的购买申请状态：none / pending / accepted / rejected
+    purchaseState() {
+      if (!this.purchaseRequest) return 'none';
+      const map = { 0: 'pending', 1: 'accepted', 2: 'rejected' };
+      return map[Number(this.purchaseRequest.status)] || 'none';
+    },
+    purchaseButtonText() {
+      if (this.purchaseState === 'pending') return '⏳ 等待卖家确认';
+      if (this.purchaseState === 'accepted') return '✅ 卖家已同意（线下交易）';
+      if (this.purchaseState === 'rejected') return '🛒 再次发起购买申请';
+      return '🛒 确认购买（发起申请）';
     }
   },
   onLoad(options) {
@@ -77,6 +105,7 @@ export default {
     const user = getUser();
     this.currentUserId = Number(user && user.id) || 0;
     this.getDetail();
+    this.loadPurchaseState();
   },
   methods: {
     // 获取商品详情（公开接口；未登录时 isCollect 为 false）
@@ -94,6 +123,48 @@ export default {
       uni.previewImage({
         urls: this.galleryImages,
         current: this.galleryImages[index]
+      });
+    },
+    // 查询我对该商品的购买申请状态（未登录时跳过）
+    async loadPurchaseState() {
+      if (!uni.getStorageSync('token') || !this.goodsId) return;
+      try {
+        const data = await request({
+          url: `/api/purchase/requests?role=buyer&goodsId=${this.goodsId}`,
+          method: 'GET'
+        });
+        const list = (data && data.list) || [];
+        this.purchaseRequest = list.length ? list[0] : null;
+      } catch (e) {
+        this.purchaseRequest = null;
+      }
+    },
+    // 买家发起确认购买申请
+    createPurchaseRequest() {
+      if (this.purchaseState === 'pending' || this.purchaseState === 'accepted') return;
+      if (!uni.getStorageSync('token')) {
+        uni.showToast({ title: '请先登录', icon: 'none' });
+        setTimeout(() => uni.navigateTo({ url: '/pages/login/login' }), 500);
+        return;
+      }
+      uni.showModal({
+        title: '确认购买',
+        content: '将向卖家发起购买申请，线下见面验货付款。确认发起吗？',
+        confirmText: '发起申请',
+        success: (r) => {
+          if (!r.confirm) return;
+          uni.showLoading({ title: '提交中', mask: true });
+          request({ url: '/api/purchase/requests', method: 'POST', data: { goodsId: Number(this.goodsId) } })
+            .then(() => {
+              uni.hideLoading();
+              uni.showToast({ title: '已发起，等待卖家确认', icon: 'success' });
+              this.loadPurchaseState();
+            })
+            .catch((e) => {
+              uni.hideLoading();
+              uni.showToast({ title: (e && e.message) || '发起失败', icon: 'none' });
+            });
+        }
       });
     },
     // 删除商品（仅发布者本人；二次确认后调用后端）
@@ -326,5 +397,40 @@ export default {
 }
 .delete-btn::after {
   border: none;
+}
+.purchase-row {
+  margin-top: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+.purchase-btn {
+  width: 100%;
+  padding: 22rpx;
+  border-radius: 12rpx;
+  background: linear-gradient(90deg, #ff9f43, #ff7a45);
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: center;
+}
+.purchase-btn::after {
+  border: none;
+}
+.purchase-btn[disabled] {
+  background: #e8e8e8;
+  color: #999;
+}
+.purchase-tip {
+  font-size: 24rpx;
+  text-align: center;
+  color: #999;
+}
+.purchase-tip.ok {
+  color: #1e9e63;
+}
+.purchase-tip.muted {
+  color: #bbb;
 }
 </style>
