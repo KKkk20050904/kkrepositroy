@@ -17,9 +17,15 @@
             <text class="lp-sub">登录后即可发布、收藏和私信沟通</text>
           </view>
 
-          <!-- 常用账号 -->
+          <!-- 常用账号（多账户切换器） -->
           <view v-if="accounts.length" class="lp-saved">
-            <text class="lp-saved-title">常用账号 · 点一下即可登录</text>
+            <view class="lp-saved-head">
+              <text class="lp-saved-title">常用账号（{{ accounts.length }}）</text>
+              <view class="lp-saved-actions">
+                <text v-if="managing" class="lp-saved-action" @click="onClearAll">清空</text>
+                <text class="lp-saved-action" @click="managing = !managing">{{ managing ? '完成' : '管理' }}</text>
+              </view>
+            </view>
             <scroll-view scroll-x class="lp-saved-list">
               <view
                 v-for="acc in accounts"
@@ -29,10 +35,24 @@
                 @click="onSavedTap(acc)"
               >
                 <view class="lp-acc-avatar">{{ initial(acc) }}</view>
-                <text class="lp-acc-name">{{ acc.nickname || acc.username }}</text>
-                <text v-if="acc.username === currentUsername" class="lp-acc-badge">当前</text>
+                <view class="lp-acc-info">
+                  <text class="lp-acc-name">{{ acc.nickname || acc.username }}</text>
+                  <text class="lp-acc-user">@{{ acc.username }}</text>
+                </view>
+                <text v-if="!managing && acc.username === currentUsername" class="lp-acc-badge">当前</text>
+                <view v-if="managing" class="lp-acc-del" @click.stop="onRemoveAccount(acc)">✕</view>
+              </view>
+              <!-- 切换 / 添加新账号 -->
+              <view class="lp-acc lp-acc-add" @click="startNewAccount">
+                <text class="lp-acc-add-icon">＋</text>
+                <text class="lp-acc-add-text">切换 / 添加账号</text>
               </view>
             </scroll-view>
+            <view v-if="currentUsername" class="lp-logout-row">
+              <text class="lp-muted">当前登录：{{ currentNickname || currentUsername }}</text>
+              <text class="lp-link" @click="logoutCurrent">退出登录</text>
+            </view>
+            <text v-else class="lp-saved-tip">点账号卡片即可免密切换；登录新账号后会自动保存</text>
           </view>
 
           <view class="lp-field" :class="{ 'lp-field-on': focusField === 'login-user' }">
@@ -210,12 +230,13 @@
 
 <script>
 import { login, register } from '../../api/auth.js'
-import { setToken, setUser, BASE_URL } from '../../common/request.js'
+import { setToken, setUser, clearAuth, BASE_URL } from '../../common/request.js'
 import {
   listAccounts,
   saveAccount,
   switchTo,
   removeAccount,
+  clearAllAccounts,
   getCurrentUsername
 } from '../../common/accounts.js'
 
@@ -243,6 +264,7 @@ export default {
       focusField: '',
       accounts: [],
       currentUsername: '',
+      managing: false,
       loginForm: { username: '', password: '' },
       registerForm: {
         username: '',
@@ -264,6 +286,10 @@ export default {
     confirmMatch() {
       return this.registerForm.confirmPassword !== '' &&
         this.registerForm.password === this.registerForm.confirmPassword
+    },
+    currentNickname() {
+      const acc = this.accounts.find((a) => a.username === this.currentUsername)
+      return acc ? acc.nickname || acc.username : ''
     },
     strength() {
       const p = this.registerForm.password
@@ -288,6 +314,7 @@ export default {
       this.mode = 'login'
       this.loading = false
       this.focusField = ''
+      this.managing = false
       this.accounts = listAccounts()
       this.currentUsername = getCurrentUsername()
       const saved = uni.getStorageSync(REMEMBER_KEY)
@@ -429,6 +456,53 @@ export default {
           uni.showToast({ title: '网络异常，请检查后端服务', icon: 'none' })
         }
       })
+    },
+    // 刷新账号列表与当前登录状态
+    refreshAccounts() {
+      this.accounts = listAccounts()
+      this.currentUsername = getCurrentUsername()
+    },
+    // 管理模式下删除某个已保存账号
+    onRemoveAccount(acc) {
+      uni.showModal({
+        title: '移除账号',
+        content: `确定不再保存「${acc.nickname || acc.username}」吗？`,
+        success: (r) => {
+          if (!r.confirm) return
+          const wasCurrent = getCurrentUsername() === acc.username
+          removeAccount(acc.username)
+          if (wasCurrent) clearAuth()
+          this.refreshAccounts()
+          uni.showToast({ title: '已移除', icon: 'none' })
+        }
+      })
+    },
+    // 清空全部已保存账号（不影响当前登录状态）
+    onClearAll() {
+      uni.showModal({
+        title: '清空常用账号',
+        content: '将删除本机保存的所有账号（当前登录状态不受影响）',
+        success: (r) => {
+          if (!r.confirm) return
+          clearAllAccounts()
+          this.managing = false
+          this.refreshAccounts()
+          uni.showToast({ title: '已清空', icon: 'none' })
+        }
+      })
+    },
+    // 切换/添加新账号：清空表单，登录成功后自动保存到列表
+    startNewAccount() {
+      this.loginForm.username = ''
+      this.loginForm.password = ''
+      this.showPwd = false
+      uni.showToast({ title: '请输入要登录的账号', icon: 'none' })
+    },
+    // 退出当前登录（保留已保存账号，方便切换）
+    logoutCurrent() {
+      clearAuth()
+      this.currentUsername = ''
+      uni.showToast({ title: '已退出登录，可切换其他账号', icon: 'none' })
     }
   }
 }
@@ -528,9 +602,26 @@ export default {
   margin-top: 24rpx;
 }
 
+.lp-saved-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .lp-saved-title {
   font-size: 24rpx;
   color: #8b95b2;
+}
+
+.lp-saved-actions {
+  display: flex;
+  align-items: center;
+}
+
+.lp-saved-action {
+  font-size: 24rpx;
+  color: #3457d5;
+  margin-left: 20rpx;
 }
 
 .lp-saved-list {
@@ -567,11 +658,24 @@ export default {
   flex-shrink: 0;
 }
 
-.lp-acc-name {
+.lp-acc-info {
+  display: flex;
+  flex-direction: column;
   margin-left: 12rpx;
+  max-width: 220rpx;
+}
+
+.lp-acc-name {
   font-size: 26rpx;
   color: #1f2d52;
-  max-width: 200rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-acc-user {
+  margin-top: 2rpx;
+  font-size: 20rpx;
+  color: #9aa6c8;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -583,6 +687,57 @@ export default {
   background: #e3ecff;
   border-radius: 999rpx;
   padding: 2rpx 10rpx;
+}
+
+.lp-acc-del {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: #ffe3e3;
+  color: #e25c5c;
+  font-size: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10rpx;
+}
+
+.lp-acc-add {
+  border-style: dashed;
+  background: #ffffff;
+}
+
+.lp-acc-add-icon {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #3457d5;
+  font-size: 30rpx;
+}
+
+.lp-acc-add-text {
+  margin-left: 10rpx;
+  font-size: 24rpx;
+  color: #3457d5;
+}
+
+.lp-logout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16rpx;
+  font-size: 24rpx;
+}
+
+.lp-saved-tip {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 22rpx;
+  color: #b6bfd8;
 }
 
 /* ==================== 输入框 ==================== */
