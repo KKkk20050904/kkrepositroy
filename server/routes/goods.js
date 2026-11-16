@@ -17,6 +17,7 @@ const pool = require('../config/db');
 const goodsController = require('../controllers/goodsController');
 const { authRequired, optionalAuth } = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { absoluteUrl } = require('../utils/url');
 
 /** 解析分页参数：page≥1，1≤pageSize≤100 */
 function parsePaging(query) {
@@ -85,6 +86,10 @@ router.get('/goods', async (req, res, next) => {
        LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
+    // 图片相对路径 → 完整 URL（H5 运行在 8080，相对路径会 404）
+    rows.forEach((row) => {
+      row.cover = absoluteUrl(req, row.cover);
+    });
 
     res.json({
       code: 0,
@@ -129,7 +134,9 @@ router.get('/goods/:id', optionalAuth, async (req, res, next) => {
       'SELECT image_url FROM goods_images WHERE goods_id = ? ORDER BY sort_order ASC, id ASC',
       [goodsId]
     );
-    goods.images = imageRows.map((r) => r.image_url);
+    goods.images = imageRows.map((r) => absoluteUrl(req, r.image_url));
+    goods.image = absoluteUrl(req, goods.image);
+    goods.avatar = absoluteUrl(req, goods.avatar);
 
     goods.isCollect = false;
     if (req.userId) {

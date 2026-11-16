@@ -10,6 +10,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 const { authRequired } = require('../middleware/auth');
+const { absoluteUrl } = require('../utils/url');
 
 router.use(authRequired);
 
@@ -88,6 +89,9 @@ router.get('/', async (req, res, next) => {
        LIMIT ? OFFSET ?`,
       [req.userId, pageSize, offset]
     );
+    rows.forEach((row) => {
+      row.image = absoluteUrl(req, row.image);
+    });
 
     res.json({
       code: 0,

@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../config/db');
 const { authRequired } = require('../middleware/auth');
+const { absoluteUrl } = require('../utils/url');
 
 const router = express.Router();
 const MAX_MESSAGE_LENGTH = 2000;
@@ -39,6 +40,9 @@ router.get('/conversations', authRequired, async (req, res, next) => {
        LIMIT ?`,
       [req.userId, req.userId, req.userId, req.userId, CONVERSATION_PAGE_SIZE],
     );
+    rows.forEach((row) => {
+      row.avatar = absoluteUrl(req, row.avatar);
+    });
 
     res.json({ code: 0, message: '获取成功', data: { list: rows } });
   } catch (error) {
@@ -60,6 +64,9 @@ router.get('/contacts', authRequired, async (req, res, next) => {
        LIMIT ?`,
       [req.userId, keyword, search, search, CONTACT_PAGE_SIZE],
     );
+    rows.forEach((row) => {
+      row.avatar = absoluteUrl(req, row.avatar);
+    });
 
     res.json({ code: 0, message: '获取成功', data: { list: rows } });
   } catch (error) {
