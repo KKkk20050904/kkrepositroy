@@ -63,18 +63,24 @@ campus-secondhand-trade/
 
 ## 🚀 快速启动
 
-### 0. 最快路径（Windows，推荐给验收/新同学）
+### 0. 最快路径：跑通模块2（发布 / 上传）
 
-双击仓库根目录的 **`一键启动.bat`**：它会依次检查 Node、安装依赖、建库建表并导入 12 件示例商品、启动后端并打印地址。看到窗口里出现「校园闲置交易后端已启动」即可，浏览器打开 <http://localhost:3000/api/goods> 就能看到商品。
+```bash
+node scripts/doctor.cjs        # ① 环境体检：缺什么会直接告诉你
+node scripts/setup-db.cjs      # ② 建库建表 + 分类种子（自动生成 server/.env）
+cd server && node app.js       # ③ 启动后端
+node scripts/smoke-test.cjs    # ④ 自测：21 项接口检查
+node scripts/seed-goods.cjs    # ⑤ 可选：走真实接口再发一遍（建库时已自动带 12 件）
+```
 
-前提只有一个：本机装了 Node.js 18+，并且 MySQL 8 已经在跑（root 密码不是 123456 时先 `set DB_PASSWORD=你的密码` 再双击）。
+Windows 上更省事：双击仓库根目录的 `启动模块2.bat`，它会把上面 ①~④ 依次做完。
+细节与排错见 [docs/模块2-下载即用.md](docs/模块2-下载即用.md)。
 
-
-### 1. 后端
+### 1. 后端（手动方式）
 
 ```bash
 cd server
-npm install
+npm install --registry=https://registry.npmmirror.com
 # 1) 初始化数据库（MySQL 已启动）
 mysql -u root -p < sql/init.sql
 # 2) 复制配置模板并填写数据库账号密码
