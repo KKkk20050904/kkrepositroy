@@ -2,6 +2,8 @@
 // 注意：真机调试时，把 BASE_URL 换成电脑的局域网 IP，例如 http://192.168.x.x:3000
 const BASE_URL = 'http://localhost:3000'
 
+export { BASE_URL }
+
 export function request(options) {
   return new Promise((resolve, reject) => {
     // 已登录时自动带上 token

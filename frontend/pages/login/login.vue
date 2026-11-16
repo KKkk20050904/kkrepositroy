@@ -19,6 +19,18 @@
 
     <!-- 登录卡片 -->
     <view class="card">
+      <!-- 当前已登录提示 -->
+      <view v-if="currentUser" class="logged-in">
+        <view class="logged-in-info">
+          <view class="logged-in-avatar">{{ initial(currentUser) }}</view>
+          <view class="logged-in-text">
+            <text class="logged-in-name">{{ currentUser.nickname || currentUser.username }}</text>
+            <text class="logged-in-tip">当前已登录 · 可直接进入</text>
+          </view>
+        </view>
+        <text class="go-home" @click="goHome">进入主页 ›</text>
+      </view>
+
       <view class="card-head">
         <text class="card-title">欢迎回来 👋</text>
         <text class="card-desc">登录账号，继续你的校园好物之旅</text>
@@ -87,20 +99,54 @@
 
       <button class="btn-register" @click="goRegister">立即注册</button>
 
+      <!-- 常用账号（多账号快速切换） -->
+      <view v-if="accounts.length" class="saved">
+        <view class="saved-head">
+          <text class="saved-title">常用账号 · {{ accounts.length }}</text>
+          <text class="saved-manage" @click="managing = !managing">{{ managing ? '完成' : '管理' }}</text>
+        </view>
+        <scroll-view class="saved-list" scroll-x>
+          <view
+            v-for="acc in accounts"
+            :key="acc.username"
+            class="saved-item"
+            :class="{ 'saved-current': acc.username === currentUsername }"
+            @click="onSavedTap(acc)"
+          >
+            <view class="saved-avatar">{{ initial(acc) }}</view>
+            <view class="saved-info">
+              <text class="saved-name">{{ acc.nickname || acc.username }}</text>
+              <text class="saved-user">@{{ acc.username }}</text>
+            </view>
+            <view v-if="managing" class="saved-del" @click.stop="onRemove(acc)">✕</view>
+            <view v-else-if="acc.username === currentUsername" class="saved-badge">当前</view>
+          </view>
+        </scroll-view>
+        <text class="saved-tip">{{ managing ? '点右上角「完成」退出管理' : '点账号卡片即可一键切换登录' }}</text>
+      </view>
+
       <view class="guest-row">
         <text class="guest" @click="goBrowse">先随便逛逛校园好物 →</text>
       </view>
     </view>
 
     <view class="footer">
-      <text>校园闲置交易 · 账号数据加密保护</text>
+      <text>校园闲置交易 · 账号保存在本机，可随时切换</text>
     </view>
   </view>
 </template>
 
 <script>
 import { login } from '../../api/auth.js'
-import { setToken, setUser } from '../../common/request.js'
+import { setToken, setUser, clearAuth, BASE_URL } from '../../common/request.js'
+import {
+  listAccounts,
+  saveAccount,
+  removeAccount,
+  switchTo,
+  getCurrentUsername,
+  getCurrentUser
+} from '../../common/accounts.js'
 
 const REMEMBER_KEY = 'remember_username'
 
@@ -111,6 +157,11 @@ export default {
       showPwd: false,
       remember: true,
       focusField: '',
+      accounts: [],
+      currentUser: null,
+      currentUsername: '',
+      managing: false,
+      switching: false,
       form: {
         username: '',
         password: ''
@@ -129,8 +180,56 @@ export default {
       this.form.username = saved
       this.remember = true
     }
+    this.refreshAccounts()
+    this.checkCurrent()
+  },
+  onShow() {
+    // 从注册页返回等场景，刷新账号列表与登录态
+    this.refreshAccounts()
+    this.checkCurrent()
   },
   methods: {
+    initial(obj) {
+      const name = (obj && (obj.nickname || obj.username)) || ''
+      return name ? name.slice(0, 1).toUpperCase() : '?'
+    },
+    refreshAccounts() {
+      this.accounts = listAccounts()
+      this.currentUsername = getCurrentUsername()
+    },
+    // 检查当前登录态是否有效（静默，不弹窗）
+    checkCurrent() {
+      const user = getCurrentUser()
+      if (!user) {
+        this.currentUser = null
+        return
+      }
+      this.currentUser = user
+      const token = uni.getStorageSync('token')
+      if (!token) {
+        this.currentUser = null
+        return
+      }
+      uni.request({
+        url: BASE_URL + '/api/auth/me',
+        header: { Authorization: 'Bearer ' + token },
+        success: (res) => {
+          const body = res.data || {}
+          if (res.statusCode === 200 && body.code === 0 && body.data && body.data.user) {
+            this.currentUser = body.data.user
+            this.currentUsername = body.data.user.username
+            uni.setStorageSync('user', body.data.user)
+          } else if (body.code === 1004) {
+            // 登录态已失效：静默清理
+            this.currentUser = null
+            clearAuth()
+          }
+        },
+        fail: () => {
+          // 后端未启动时保持本地登录态，不打扰用户
+        }
+      })
+    },
     toggleRemember() {
       this.remember = !this.remember
       if (!this.remember) uni.removeStorageSync(REMEMBER_KEY)
@@ -143,6 +242,75 @@ export default {
     },
     goBrowse() {
       uni.navigateTo({ url: '/pages/goods/list' })
+    },
+    goHome() {
+      uni.reLaunch({ url: '/pages/index/index' })
+    },
+    // 点击已保存的账号
+    onSavedTap(acc) {
+      if (this.managing) return
+      if (acc.username === this.currentUsername && this.currentUser) {
+        uni.showToast({ title: '当前已登录该账号', icon: 'none' })
+        return
+      }
+      this.switchAccount(acc)
+    },
+    // 一键切换账号：验证 token 后直接写入登录态
+    switchAccount(acc) {
+      if (this.switching) return
+      this.switching = true
+      uni.showLoading({ title: '切换账号中', mask: true })
+      uni.request({
+        url: BASE_URL + '/api/auth/me',
+        header: { Authorization: 'Bearer ' + acc.token },
+        success: (res) => {
+          uni.hideLoading()
+          const body = res.data || {}
+          if (res.statusCode === 200 && body.code === 0 && body.data && body.data.user) {
+            const user = body.data.user
+            switchTo(acc)
+            setUser(user)
+            this.refreshAccounts()
+            this.checkCurrent()
+            uni.showToast({ title: '已切换到 ' + (user.nickname || user.username) })
+            setTimeout(() => uni.reLaunch({ url: '/pages/index/index' }), 700)
+          } else if (body.code === 1004) {
+            // 该账号登录已过期：从列表移除并提示重新输入密码
+            removeAccount(acc.username)
+            this.refreshAccounts()
+            this.form.username = acc.username
+            this.form.password = ''
+            uni.showToast({ title: '该账号登录已过期，请重新输入密码', icon: 'none' })
+          } else {
+            uni.showToast({ title: body.message || '切换失败', icon: 'none' })
+          }
+        },
+        fail: () => {
+          uni.hideLoading()
+          uni.showToast({ title: '网络异常，请检查后端服务', icon: 'none' })
+        },
+        complete: () => {
+          this.switching = false
+        }
+      })
+    },
+    // 管理模式下删除账号
+    onRemove(acc) {
+      uni.showModal({
+        title: '移除账号',
+        content: `确定不再保存「${acc.nickname || acc.username}」吗？`,
+        success: (r) => {
+          if (!r.confirm) return
+          removeAccount(acc.username)
+          if (getCurrentUsername() === acc.username) {
+            clearAuth()
+            this.currentUser = null
+            this.form.username = acc.username
+          }
+          this.refreshAccounts()
+          uni.showToast({ title: '已移除', icon: 'none' })
+        }
+      })
     },
     handleLogin() {
       if (this.loading) return
@@ -165,6 +333,9 @@ export default {
           }
           setToken(data.token)
           setUser(data.user)
+          // 保存到常用账号（多账号快速切换）
+          saveAccount(data.token, data.user)
+          this.refreshAccounts()
           uni.showToast({ title: '登录成功', icon: 'success' })
           setTimeout(() => {
             uni.navigateBack({
@@ -318,6 +489,59 @@ export default {
   }
 }
 
+/* 当前已登录 */
+.logged-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0f6ff;
+  border: 2rpx solid #dbe8ff;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 32rpx;
+}
+
+.logged-in-info {
+  display: flex;
+  align-items: center;
+}
+
+.logged-in-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3457d5, #5b7cff);
+  color: #ffffff;
+  font-size: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logged-in-text {
+  display: flex;
+  flex-direction: column;
+  margin-left: 18rpx;
+}
+
+.logged-in-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1f2d52;
+}
+
+.logged-in-tip {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: #8b95b2;
+}
+
+.go-home {
+  font-size: 26rpx;
+  color: #3457d5;
+  font-weight: 500;
+}
+
 .card-head {
   display: flex;
   flex-direction: column;
@@ -469,6 +693,120 @@ export default {
 
 .btn-register::after {
   border: none;
+}
+
+/* ============ 常用账号 ============ */
+.saved {
+  margin-top: 36rpx;
+  padding-top: 32rpx;
+  border-top: 2rpx solid #f0f3fb;
+}
+
+.saved-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.saved-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1f2d52;
+}
+
+.saved-manage {
+  font-size: 24rpx;
+  color: #3457d5;
+}
+
+.saved-list {
+  margin-top: 20rpx;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.saved-item {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  margin-right: 20rpx;
+  padding: 16rpx 24rpx 16rpx 16rpx;
+  background: #f7f9ff;
+  border: 2rpx solid #e8ecfa;
+  border-radius: 20rpx;
+  transition: all 0.2s ease;
+}
+
+.saved-current {
+  background: #eef3ff;
+  border-color: #b9c9f7;
+}
+
+.saved-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6b8cff, #3457d5);
+  color: #ffffff;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.saved-info {
+  display: flex;
+  flex-direction: column;
+  margin-left: 14rpx;
+  margin-right: 12rpx;
+  max-width: 240rpx;
+}
+
+.saved-name {
+  font-size: 26rpx;
+  color: #1f2d52;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.saved-user {
+  margin-top: 2rpx;
+  font-size: 22rpx;
+  color: #9aa6c8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.saved-badge {
+  align-self: flex-start;
+  font-size: 20rpx;
+  color: #3457d5;
+  background: #e3ecff;
+  border-radius: 999rpx;
+  padding: 2rpx 12rpx;
+  margin-left: 6rpx;
+}
+
+.saved-del {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #ffe3e3;
+  color: #e25c5c;
+  font-size: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6rpx;
+}
+
+.saved-tip {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 22rpx;
+  color: #b6bfd8;
 }
 
 /* ============ 分割线 / 游客入口 ============ */

@@ -183,6 +183,7 @@
 <script>
 import { register } from '../../api/auth.js'
 import { setToken, setUser } from '../../common/request.js'
+import { saveAccount } from '../../common/accounts.js'
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/
 const PHONE_RE = /^1\d{10}$/
@@ -307,6 +308,8 @@ export default {
         .then((data) => {
           setToken(data.token)
           setUser(data.user)
+          // 注册成功即自动登录，同时保存到"常用账号"列表，方便下次一键登录/切换
+          saveAccount(data.token, data.user)
           uni.showToast({ title: '注册成功，已自动登录', icon: 'success' })
           setTimeout(() => {
             uni.reLaunch({ url: '/pages/index/index' })

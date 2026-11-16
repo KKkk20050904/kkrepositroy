@@ -35,10 +35,10 @@
       </view>
     </view>
 
-    <!-- 后端连接状态 -->
-    <view class="status" :class="{ ok: serverOk }">
+    <!-- 后端连接状态（点击可重试） -->
+    <view class="status" :class="{ ok: serverOk }" @click="checkServer">
       <view class="status-dot"></view>
-      <text>{{ serverOk ? '后端服务已连接，可以发布商品' : '后端服务未连接（请先运行 一键启动.bat）' }}</text>
+      <text>{{ serverOk ? '后端服务已连接，可以发布商品' : '后端服务未连接：请先在 server 目录运行 node app.js（点此处重试）' }}</text>
     </view>
 
     <!-- 发布 / 逛逛 入口 -->
