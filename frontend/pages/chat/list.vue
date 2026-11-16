@@ -142,8 +142,8 @@ export default {
     this.loadConversations()
   },
   onShow() {
-    if (this.hasShown) this.loadActiveTab()
-    this.hasShown = true
+    // 每次显示都重新拉取（切换账号后回到本页能看到新账号的消息）
+    this.loadActiveTab()
     if (!this.pollTimer) {
       this.pollTimer = setInterval(this.refreshConversations, REFRESH_INTERVAL)
     }

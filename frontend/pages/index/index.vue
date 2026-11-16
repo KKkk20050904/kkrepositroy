@@ -53,6 +53,17 @@
     <button class="publish-btn" @click="goPublish">发布闲置商品</button>
     <button class="publish-btn browse-btn" @click="goGoodsList">逛逛校园闲置</button>
 
+    <!-- 消息 / 收藏 入口 -->
+    <view class="msg-bar">
+      <button class="msg-btn" @click="goChatList">
+        <text>💬 消息</text>
+        <view v-if="unreadTotal > 0" class="unread-badge">{{ unreadTotal > 99 ? '99+' : unreadTotal }}</view>
+      </button>
+      <button class="msg-btn" @click="goMyCollect">
+        <text>⭐ 我的收藏</text>
+      </button>
+    </view>
+
     <view class="footer">课程设计小组项目 · 校园闲置物品交易</view>
 
     <!-- 登录 / 注册弹窗 -->
@@ -63,6 +74,7 @@
 <script>
 import LoginPopup from '../../components/login-popup/login-popup.vue'
 import { getCurrentUser } from '../../common/accounts.js'
+import { BASE_URL } from '../../common/request.js'
 
 export default {
   components: { LoginPopup },
@@ -70,7 +82,8 @@ export default {
     return {
       serverOk: false,
       showLogin: false,
-      currentUser: null
+      currentUser: null,
+      unreadTotal: 0
     };
   },
   onLoad() {
@@ -79,6 +92,7 @@ export default {
   onShow() {
     // 从其他页面返回时刷新登录态（登录/切换后这里会更新按钮文案）
     this.currentUser = getCurrentUser()
+    this.loadUnread()
   },
   methods: {
     // 探测后端是否在线（联调用：/api/health）
@@ -98,6 +112,32 @@ export default {
     },
     onAuthSuccess(user) {
       this.currentUser = user
+      this.loadUnread()
+    },
+    // 拉取未读消息总数（未登录或请求失败时静默忽略）
+    loadUnread() {
+      const token = uni.getStorageSync('token')
+      if (!token) {
+        this.unreadTotal = 0
+        return
+      }
+      uni.request({
+        url: BASE_URL + '/api/msg/conversations',
+        header: { Authorization: 'Bearer ' + token },
+        success: (res) => {
+          const body = res.data || {}
+          if (res.statusCode === 200 && body.code === 0 && body.data && Array.isArray(body.data.list)) {
+            this.unreadTotal = body.data.list.reduce((sum, item) => sum + (Number(item.unreadCount) || 0), 0)
+          }
+        },
+        fail: () => {}
+      })
+    },
+    goChatList() {
+      uni.navigateTo({ url: '/pages/chat/list' });
+    },
+    goMyCollect() {
+      uni.navigateTo({ url: '/pages/my-collect/my-collect' });
     },
     goPublish() {
       uni.navigateTo({ url: '/pages/publish/publish' });
@@ -261,6 +301,43 @@ export default {
   background: #ffffff;
   color: #2b85ff;
   border: 2rpx solid #2b85ff;
+}
+
+.msg-bar {
+  display: flex;
+  gap: 20rpx;
+  margin: 20rpx 24rpx 0;
+}
+
+.msg-btn {
+  position: relative;
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #ffffff;
+  color: #333;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  border: 2rpx solid #e8ecfa;
+}
+
+.msg-btn::after {
+  border: none;
+}
+
+.unread-badge {
+  position: absolute;
+  top: 8rpx;
+  right: 20rpx;
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 8rpx;
+  line-height: 36rpx;
+  border-radius: 999rpx;
+  background: #ff4d4f;
+  color: #fff;
+  font-size: 20rpx;
+  text-align: center;
 }
 
 .footer {
