@@ -156,6 +156,46 @@ router.get('/goods/:id', optionalAuth, async (req, res, next) => {
 // ==================== 发布闲置商品（需登录） ====================
 router.post('/goods', authRequired, goodsController.createGoods);
 
+// ==================== 删除商品（需登录，仅发布者本人可删除） ====================
+router.delete('/goods/:id', authRequired, async (req, res, next) => {
+  const goodsId = Number(req.params.id);
+  if (!Number.isSafeInteger(goodsId) || goodsId < 1) {
+    return res.status(400).json({ code: 1001, message: '商品ID无效' });
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    // 锁行读取，确认商品存在且属于当前用户
+    const [rows] = await conn.query('SELECT id, user_id FROM goods WHERE id = ? FOR UPDATE', [goodsId]);
+    if (rows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ code: 1003, message: '商品不存在或已删除' });
+    }
+    if (Number(rows[0].user_id) !== Number(req.userId)) {
+      await conn.rollback();
+      return res.status(403).json({ code: 1003, message: '只能删除自己发布的商品' });
+    }
+
+    // 级联清理：图片、收藏记录，再删除商品
+    await conn.query('DELETE FROM goods_images WHERE goods_id = ?', [goodsId]);
+    await conn.query('DELETE FROM collect WHERE goods_id = ?', [goodsId]);
+    await conn.query('DELETE FROM goods WHERE id = ?', [goodsId]);
+
+    await conn.commit();
+    res.json({ code: 0, message: '已删除', data: null });
+  } catch (err) {
+    if (conn) {
+      try { await conn.rollback(); } catch (rollbackErr) { /* ignore */ }
+    }
+    next(err);
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
 // ==================== 图片上传（需登录） ====================
 router.post('/upload', authRequired, upload.array('files', 9), goodsController.uploadImages);
 

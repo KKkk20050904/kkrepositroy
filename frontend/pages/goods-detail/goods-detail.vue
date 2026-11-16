@@ -23,11 +23,15 @@
     <button class="collect-btn" @click="toggleCollect">
       {{ detail.isCollect ? '已收藏（点击取消）' : '☆☆ 收藏这件商品' }}
     </button>
+
+    <!-- 仅发布者本人可见：删除商品 -->
+    <button v-if="canDelete" class="delete-btn" @click="deleteGoods">🗑 删除这件商品</button>
   </view>
 </template>
 
 <script>
 import { request } from '../../common/request.js';
+import { getCurrentUser } from '../../common/accounts.js';
 
 export default {
   data() {
@@ -42,6 +46,12 @@ export default {
       const imgs = this.detail && this.detail.images;
       if (Array.isArray(imgs) && imgs.length > 0) return imgs;
       return this.detail && this.detail.image ? [this.detail.image] : [];
+    },
+    // 当前登录用户是否为该商品的发布者（是则可删除）
+    canDelete() {
+      const user = getCurrentUser();
+      if (!user || !this.detail) return false;
+      return Number(user.id) === Number(this.detail.user_id);
     }
   },
   onLoad(options) {
@@ -64,6 +74,32 @@ export default {
       uni.previewImage({
         urls: this.galleryImages,
         current: this.galleryImages[index]
+      });
+    },
+    // 删除商品（仅发布者本人；二次确认后调用后端）
+    deleteGoods() {
+      uni.showModal({
+        title: '删除商品',
+        content: '确定删除这件商品吗？删除后不可恢复。',
+        confirmText: '删除',
+        confirmColor: '#e64340',
+        success: (r) => {
+          if (!r.confirm) return;
+          uni.showLoading({ title: '删除中', mask: true });
+          request({ url: `/api/goods/${this.goodsId}`, method: 'DELETE' })
+            .then(() => {
+              uni.hideLoading();
+              uni.showToast({ title: '已删除', icon: 'success' });
+              setTimeout(() => {
+                // 返回列表页并刷新（reLaunch 保证列表拿到最新数据）
+                uni.reLaunch({ url: '/pages/goods/list' });
+              }, 700);
+            })
+            .catch((e) => {
+              uni.hideLoading();
+              uni.showToast({ title: (e && e.message) || '删除失败', icon: 'none' });
+            });
+        }
       });
     },
     // 收藏 / 取消收藏（需登录）
@@ -143,5 +179,18 @@ export default {
   padding: 20rpx;
   border-radius: 12rpx;
   font-size: 30rpx;
+}
+.delete-btn {
+  margin-top: 24rpx;
+  background: #fff;
+  color: #e64340;
+  border: 2rpx solid #f3c0be;
+  text-align: center;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+}
+.delete-btn::after {
+  border: none;
 }
 </style>
