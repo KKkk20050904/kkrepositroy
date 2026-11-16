@@ -38,18 +38,21 @@
       </button>
       <button v-if="detail.user_id && !isOwner" class="chat-btn" @click="goChat">💬 联系卖家</button>
     </view>
+
+    <!-- 仅发布者本人可见：删除商品 -->
+    <button v-if="canDelete" class="delete-btn" @click="deleteGoods">🗑 删除这件商品</button>
   </view>
 </template>
 
 <script>
-import { request, getUser } from '../../common/request.js';
+import { request } from '../../common/request.js';
+import { getCurrentUser } from '../../common/accounts.js';
 import { buildChatUrl } from '../../common/chat.js';
 
 export default {
   data() {
     return {
       goodsId: null,
-      currentUserId: 0,
       detail: { isCollect: false }
     };
   },
@@ -60,9 +63,15 @@ export default {
       if (Array.isArray(imgs) && imgs.length > 0) return imgs;
       return this.detail && this.detail.image ? [this.detail.image] : [];
     },
+    // 当前登录用户是否为该商品的发布者
     isOwner() {
-      return Boolean(this.detail && this.detail.user_id &&
-        Number(this.detail.user_id) === this.currentUserId);
+      const user = getCurrentUser();
+      if (!user || !this.detail) return false;
+      return Number(user.id) === Number(this.detail.user_id);
+    },
+    // 仅发布者本人可见删除按钮
+    canDelete() {
+      return this.isOwner;
     },
     sellerCaption() {
       if (!this.detail || !this.detail.user_id) return '平台商品 · 暂不支持私信';
@@ -71,8 +80,6 @@ export default {
   },
   onLoad(options) {
     this.goodsId = options.id;
-    const user = getUser();
-    this.currentUserId = Number(user && user.id) || 0;
     this.getDetail();
   },
   methods: {
@@ -91,6 +98,32 @@ export default {
       uni.previewImage({
         urls: this.galleryImages,
         current: this.galleryImages[index]
+      });
+    },
+    // 删除商品（仅发布者本人；二次确认后调用后端）
+    deleteGoods() {
+      uni.showModal({
+        title: '删除商品',
+        content: '确定删除这件商品吗？删除后不可恢复。',
+        confirmText: '删除',
+        confirmColor: '#e64340',
+        success: (r) => {
+          if (!r.confirm) return;
+          uni.showLoading({ title: '删除中', mask: true });
+          request({ url: `/api/goods/${this.goodsId}`, method: 'DELETE' })
+            .then(() => {
+              uni.hideLoading();
+              uni.showToast({ title: '已删除', icon: 'success' });
+              setTimeout(() => {
+                // 返回列表页并刷新（reLaunch 保证列表拿到最新数据）
+                uni.reLaunch({ url: '/pages/goods/list' });
+              }, 700);
+            })
+            .catch((e) => {
+              uni.hideLoading();
+              uni.showToast({ title: (e && e.message) || '删除失败', icon: 'none' });
+            });
+        }
       });
     },
     // 收藏 / 取消收藏（需登录）
@@ -281,6 +314,19 @@ export default {
 }
 .collect-btn::after,
 .chat-btn::after {
+  border: none;
+}
+.delete-btn {
+  margin-top: 24rpx;
+  background: #fff;
+  color: #e64340;
+  border: 2rpx solid #f3c0be;
+  text-align: center;
+  padding: 20rpx;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+}
+.delete-btn::after {
   border: none;
 }
 </style>
