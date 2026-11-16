@@ -41,23 +41,44 @@
       <text>{{ serverOk ? '后端服务已连接，可以发布商品' : '后端服务未连接：请先在 server 目录运行 node app.js（点此处重试）' }}</text>
     </view>
 
+    <!-- 登录 / 切换账号（点击弹出登录注册浮层） -->
+    <view class="auth-bar">
+      <button class="auth-btn" @click="showLogin = true">
+        <text v-if="currentUser">👋 {{ currentUser.nickname || currentUser.username }} · 切换账号</text>
+        <text v-else>登录 / 注册</text>
+      </button>
+    </view>
+
     <!-- 发布 / 逛逛 入口 -->
     <button class="publish-btn" @click="goPublish">发布闲置商品</button>
     <button class="publish-btn browse-btn" @click="goGoodsList">逛逛校园闲置</button>
 
     <view class="footer">课程设计小组项目 · 校园闲置物品交易</view>
+
+    <!-- 登录 / 注册弹窗 -->
+    <login-popup :show="showLogin" @update:show="showLogin = $event" @success="onAuthSuccess" />
   </view>
 </template>
 
 <script>
+import LoginPopup from '../../components/login-popup/login-popup.vue'
+import { getCurrentUser } from '../../common/accounts.js'
+
 export default {
+  components: { LoginPopup },
   data() {
     return {
-      serverOk: false
+      serverOk: false,
+      showLogin: false,
+      currentUser: null
     };
   },
   onLoad() {
     this.checkServer();
+  },
+  onShow() {
+    // 从其他页面返回时刷新登录态（登录/切换后这里会更新按钮文案）
+    this.currentUser = getCurrentUser()
   },
   methods: {
     // 探测后端是否在线（联调用：/api/health）
@@ -74,6 +95,9 @@ export default {
           this.serverOk = false;
         }
       });
+    },
+    onAuthSuccess(user) {
+      this.currentUser = user
     },
     goPublish() {
       uni.navigateTo({ url: '/pages/publish/publish' });
@@ -211,6 +235,25 @@ export default {
   color: #fff;
   border-radius: 44rpx;
   font-size: 34rpx;
+}
+
+.auth-bar {
+  margin: 24rpx 24rpx 0;
+}
+
+.auth-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #ffffff;
+  color: #2b85ff;
+  border: 2rpx solid #c9d4f2;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+}
+
+.auth-btn::after {
+  border: none;
 }
 
 .browse-btn {
