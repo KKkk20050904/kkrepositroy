@@ -2,13 +2,24 @@
   <view class="chat-page">
     <view class="chat-heading">
       <text class="back-button" @click="backToMessages">‹ 消息</text>
-      <image v-if="peerAvatar" class="peer-avatar" :src="peerAvatar" mode="aspectFill"></image>
+      <image v-if="peerAvatar" class="peer-avatar" :src="resolveImageUrl(peerAvatar)" mode="aspectFill"></image>
       <view v-else class="peer-avatar avatar-placeholder">{{ peerName.slice(0, 1) }}</view>
       <view class="peer-info">
         <text class="peer-name">{{ peerName }}</text>
         <text class="peer-status"><text class="status-dot"></text>校园私信 · 请友好沟通</text>
       </view>
       <text class="refresh-button" @click="loadMessages">刷新</text>
+    </view>
+
+    <view v-if="goods" class="context-card" @click="openGoods">
+      <image v-if="goods.image" class="context-image" :src="resolveImageUrl(goods.image)" mode="aspectFill" />
+      <view v-else class="context-image context-placeholder">🛍</view>
+      <view class="context-copy">
+        <text class="context-label">正在咨询</text>
+        <text class="context-title">{{ goods.title }}</text>
+      </view>
+      <text v-if="goods.price" class="context-price">¥{{ formatPrice(goods.price) }}</text>
+      <text class="context-arrow">›</text>
     </view>
 
     <view v-if="loadError" class="load-state">
@@ -26,27 +37,36 @@
       <view v-else-if="messages.length === 0" class="empty-state">
         <text class="empty-icon">✉</text>
         <text>还没有聊天记录，打个招呼吧</text>
-      </view>
-      <view
-        v-for="message in messages"
-        :id="`message-${message.id}`"
-        :key="message.id"
-        class="message-row"
-        :class="{ 'message-mine': message.senderId === currentUserId }"
-      >
-        <image v-if="message.senderId !== currentUserId && peerAvatar" class="message-avatar" :src="peerAvatar" mode="aspectFill"></image>
-        <view v-else-if="message.senderId !== currentUserId" class="message-avatar avatar-placeholder">{{ peerName.slice(0, 1) }}</view>
-        <view class="message-body">
-          <text class="message-bubble">{{ message.content }}</text>
-          <text class="message-time">{{ formatTime(message.createdAt) }}</text>
+        <view class="empty-starters">
+          <text v-for="reply in emptyStarters" :key="reply" class="empty-starter" @click="applyQuickReply(reply)">{{ reply }}</text>
         </view>
-        <view v-if="message.senderId === currentUserId" class="message-avatar my-avatar">我</view>
       </view>
+      <template v-for="(message, index) in messages" :key="message.id">
+        <view v-if="showDateDivider(index)" class="date-divider">
+          <text>{{ formatDateLabel(message.createdAt) }}</text>
+        </view>
+        <view
+          :id="`message-${message.id}`"
+          class="message-row"
+          :class="{ 'message-mine': message.senderId === currentUserId }"
+        >
+          <image v-if="message.senderId !== currentUserId && peerAvatar" class="message-avatar" :src="resolveImageUrl(peerAvatar)" mode="aspectFill"></image>
+          <view v-else-if="message.senderId !== currentUserId" class="message-avatar avatar-placeholder">{{ peerName.slice(0, 1) }}</view>
+          <view class="message-body">
+            <text class="message-bubble">{{ message.content }}</text>
+            <text class="message-time">{{ formatTime(message.createdAt) }}</text>
+          </view>
+          <view v-if="message.senderId === currentUserId" class="message-avatar my-avatar">我</view>
+        </view>
+      </template>
       <view v-if="syncError" class="sync-error" @click="retrySync">消息同步暂停，点此重试</view>
       <view id="message-bottom" class="list-bottom"></view>
     </scroll-view>
 
     <view class="composer">
+      <view v-if="!draft && messages.length" class="quick-replies">
+        <text v-for="reply in quickReplies" :key="reply" class="quick-reply" @click="applyQuickReply(reply)">{{ reply }}</text>
+      </view>
       <view v-if="showEmojiPanel" class="emoji-panel">
         <text v-for="emoji in emojis" :key="emoji" class="emoji-item" @click="appendEmoji(emoji)">{{ emoji }}</text>
         <text v-for="face in kaomojis" :key="face" class="kaomoji-item" @click="appendEmoji(face)">{{ face }}</text>
@@ -89,8 +109,19 @@
 <script>
 import { getMessages, sendMessage } from '../../api/message.js'
 import { getUser } from '../../common/request.js'
+import { resolveImageUrl } from '../../common/chat.js'
 
 const POLL_INTERVAL = 5000
+
+function decodeQueryValue(value) {
+  const text = value === undefined || value === null ? '' : String(value)
+  if (!text.includes('%')) return text
+  try {
+    return decodeURIComponent(text)
+  } catch (error) {
+    return text
+  }
+}
 
 export default {
   data() {
@@ -99,8 +130,10 @@ export default {
       peerName: '同学',
       peerAvatar: '',
       currentUserId: 0,
+      goods: null,
       draft: '',
       messages: [],
+      quickReplies: ['还在吗？', '可以便宜一点吗？', '什么时候方便交易？', '好的，谢谢～'],
       emojis: ['😀', '🥰', '😂', '😊', '😍', '👍', '❤️', '🎉', '🙏', '✨', '🤔', '🌷'],
       kaomojis: ['(๑˃̵ᴗ˂̵)و', 'ヾ(≧▽≦*)o', '(｡･ω･｡)ﾉ♡', '(ง •̀_•́)ง'],
       symbols: ['♡', '☆', '♪', '→', '✓', '…', '✿', 'ღ', '∞', '☀', '✔', '❀'],
@@ -121,6 +154,11 @@ export default {
       pollInFlight: false
     }
   },
+  computed: {
+    emptyStarters() {
+      return this.quickReplies.slice(0, 3)
+    }
+  },
   onLoad(options) {
     const peerId = Number(options.peerId)
     if (!Number.isSafeInteger(peerId) || peerId < 1) {
@@ -132,6 +170,17 @@ export default {
     this.peerId = peerId
     this.peerName = String(options.name || '同学').slice(0, 30)
     this.peerAvatar = options.avatar || ''
+    this.draft = decodeQueryValue(options.prefill).slice(0, 2000)
+    const goodsId = Number(options.goodsId)
+    const goodsTitle = decodeQueryValue(options.goodsTitle)
+    if (Number.isSafeInteger(goodsId) && goodsId > 0 && goodsTitle) {
+      this.goods = {
+        id: goodsId,
+        title: goodsTitle,
+        price: decodeQueryValue(options.goodsPrice),
+        image: decodeQueryValue(options.goodsImage)
+      }
+    }
     const user = getUser()
     this.currentUserId = Number(user && user.id) || 0
     uni.setNavigationBarTitle({ title: this.peerName })
@@ -152,6 +201,7 @@ export default {
     this.loadMessages().finally(() => uni.stopPullDownRefresh())
   },
   methods: {
+    resolveImageUrl,
     stopPolling() {
       if (this.pollTimer) {
         clearInterval(this.pollTimer)
@@ -215,6 +265,41 @@ export default {
     },
     appendEmoji(value) {
       this.draft += value
+    },
+    applyQuickReply(reply) {
+      this.draft = reply
+      this.showEmojiPanel = false
+    },
+    openGoods() {
+      if (!this.goods) return
+      uni.navigateTo({ url: `/pages/goods/detail?id=${this.goods.id}` })
+    },
+    formatPrice(value) {
+      const price = Number(value)
+      return Number.isFinite(price) ? price.toFixed(2) : value
+    },
+    dayKey(value) {
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return ''
+      return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+    },
+    showDateDivider(index) {
+      if (index === 0) return true
+      const current = this.messages[index]
+      const previous = this.messages[index - 1]
+      if (!current || !previous) return false
+      return this.dayKey(current.createdAt) !== this.dayKey(previous.createdAt)
+    },
+    formatDateLabel(value) {
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return ''
+      const now = new Date()
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+      const target = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+      const diffDays = Math.round((today - target) / 86400000)
+      if (diffDays === 0) return '今天'
+      if (diffDays === 1) return '昨天'
+      return `${date.getMonth() + 1}月${date.getDate()}日`
     },
     formatTime(value) {
       const date = new Date(value)
@@ -341,6 +426,68 @@ export default {
   font-size: 25rpx;
 }
 
+.context-card {
+  margin: 16rpx 22rpx 0;
+  padding: 14rpx 16rpx;
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  border: 1rpx solid #f1eae7;
+  border-radius: 16rpx;
+  background: #fff;
+  box-shadow: 0 6rpx 18rpx rgba(63, 35, 25, .045);
+}
+
+.context-image {
+  width: 66rpx;
+  height: 66rpx;
+  flex: none;
+  border-radius: 12rpx;
+  background: #fff1ec;
+}
+
+.context-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+}
+
+.context-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.context-label {
+  color: #d6332e;
+  font-size: 18rpx;
+  font-weight: 700;
+}
+
+.context-title {
+  overflow: hidden;
+  color: #3d3431;
+  font-size: 22rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-price {
+  flex: none;
+  color: #d62c2b;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.context-arrow {
+  flex: none;
+  color: #c2b8b4;
+  font-size: 32rpx;
+}
+
 .message-list {
   flex: 1;
   min-height: 0;
@@ -370,6 +517,23 @@ export default {
   font-size: 58rpx;
 }
 
+.empty-starters {
+  margin-top: 4rpx;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10rpx;
+}
+
+.empty-starter {
+  padding: 10rpx 18rpx;
+  border: 1rpx solid #f0deda;
+  border-radius: 999rpx;
+  color: #b34a43;
+  background: #fff8f6;
+  font-size: 20rpx;
+}
+
 .retry-button {
   margin: 0;
   padding: 0 24rpx;
@@ -382,6 +546,19 @@ export default {
 
 .retry-button::after {
   border: none;
+}
+
+.date-divider {
+  margin: 8rpx 0 22rpx;
+  text-align: center;
+}
+
+.date-divider text {
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  color: #a79d99;
+  background: rgba(255, 255, 255, .72);
+  font-size: 19rpx;
 }
 
 .message-row {
@@ -459,6 +636,23 @@ export default {
   border-top: 1rpx solid #f1eae7;
   background: #fff;
   box-shadow: 0 -8rpx 24rpx rgba(70, 40, 30, .055);
+}
+
+.quick-replies {
+  width: 100%;
+  margin-bottom: 10rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.quick-reply {
+  padding: 10rpx 18rpx;
+  border: 1rpx solid #f0deda;
+  border-radius: 999rpx;
+  color: #b34a43;
+  background: #fff8f6;
+  font-size: 20rpx;
 }
 
 .emoji-panel {

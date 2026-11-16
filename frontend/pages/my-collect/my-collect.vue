@@ -8,7 +8,10 @@
         <image class="goods-img" :src="item.image" mode="aspectFill"></image>
         <view class="goods-info">
           <view class="goods-title">{{ item.title }}</view>
-          <view class="goods-price">¥{{ item.price }}</view>
+          <view class="goods-footer">
+            <view class="goods-price">¥{{ item.price }}</view>
+            <text v-if="canChat(item)" class="chat-mini" @click.stop="contactSeller(item)">💬 联系卖家</text>
+          </view>
         </view>
       </view>
     </view>
@@ -20,12 +23,14 @@
 </template>
 
 <script>
-import { request } from '../../common/request.js';
+import { request, getUser } from '../../common/request.js';
+import { buildChatUrl } from '../../common/chat.js';
 
 export default {
   data() {
     return {
       collectList: [],
+      currentUserId: 0,
       page: 1,
       pageSize: 10,
       loading: false,
@@ -33,6 +38,8 @@ export default {
     };
   },
   onLoad() {
+    const user = getUser();
+    this.currentUserId = Number(user && user.id) || 0;
     this.getCollectList();
   },
   onReachBottom() {
@@ -74,6 +81,32 @@ export default {
     },
     goDetail(id) {
       uni.navigateTo({ url: `/pages/goods-detail/goods-detail?id=${id}` });
+    },
+    canChat(item) {
+      return Boolean(item.seller_id) && Number(item.seller_id) !== this.currentUserId;
+    },
+    contactSeller(item) {
+      if (!this.canChat(item)) {
+        uni.showToast({ title: item.seller_id ? '不能和自己聊天哦' : '该商品暂不支持私信', icon: 'none' });
+        return;
+      }
+      if (!uni.getStorageSync('token')) {
+        uni.showToast({ title: '请先登录后再联系卖家', icon: 'none' });
+        setTimeout(() => uni.navigateTo({ url: '/pages/login/login' }), 400);
+        return;
+      }
+      const url = buildChatUrl({
+        peerId: item.seller_id,
+        name: item.seller_name,
+        avatar: item.seller_avatar || '',
+        goods: {
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          image: item.image
+        }
+      });
+      uni.navigateTo({ url });
     }
   }
 };
@@ -121,11 +154,27 @@ export default {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
-.goods-price {
+.goods-footer {
   margin-top: 10rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8rpx;
+}
+.goods-price {
   font-size: 32rpx;
   color: #ff4d4f;
   font-weight: bold;
+}
+.chat-mini {
+  flex: none;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  color: #d6332e;
+  background: #fff0ed;
+  font-size: 20rpx;
+  line-height: 1.5;
+  white-space: nowrap;
 }
 .load-tip {
   text-align: center;

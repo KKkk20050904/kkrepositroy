@@ -81,9 +81,11 @@ router.get('/', async (req, res, next) => {
     const [rows] = await pool.query(
       `SELECT c.id AS collect_id, c.create_time,
               g.id, g.title, g.price, g.original_price, g.category_id, g.status,
-              (SELECT image_url FROM goods_images WHERE goods_id = g.id ORDER BY sort_order ASC, id ASC LIMIT 1) AS image
+              (SELECT image_url FROM goods_images WHERE goods_id = g.id ORDER BY sort_order ASC, id ASC LIMIT 1) AS image,
+              g.user_id AS seller_id, u.nickname AS seller_name, u.avatar AS seller_avatar
        FROM collect c
        JOIN goods g ON c.goods_id = g.id
+       LEFT JOIN users u ON u.id = g.user_id
        WHERE c.user_id = ? AND g.status = 1
        ORDER BY c.create_time DESC, c.id DESC
        LIMIT ? OFFSET ?`,
@@ -91,6 +93,7 @@ router.get('/', async (req, res, next) => {
     );
     rows.forEach((row) => {
       row.image = absoluteUrl(req, row.image);
+      row.seller_avatar = absoluteUrl(req, row.seller_avatar);
     });
 
     res.json({

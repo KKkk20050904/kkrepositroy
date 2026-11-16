@@ -68,7 +68,7 @@
           @click="openChat(item)"
         >
           <view class="avatar-wrap">
-            <image v-if="item.avatar" class="conversation-avatar" :src="item.avatar" mode="aspectFill"></image>
+            <image v-if="item.avatar" class="conversation-avatar" :src="resolveImageUrl(item.avatar)" mode="aspectFill"></image>
             <view v-else class="conversation-avatar avatar-placeholder">{{ item.name.slice(0, 1) }}</view>
             <text v-if="item.unreadCount" class="avatar-unread"></text>
           </view>
@@ -97,6 +97,7 @@
 <script>
 import { getContacts, getConversations } from '../../api/message.js'
 import { getUser } from '../../common/request.js'
+import { resolveImageUrl } from '../../common/chat.js'
 
 const REFRESH_INTERVAL = 10000
 
@@ -110,6 +111,7 @@ export default {
       keyword: '',
       loading: true,
       loadError: false,
+      hasShown: false,
       pollTimer: null,
       searchTimer: null
     }
@@ -140,6 +142,8 @@ export default {
     this.loadConversations()
   },
   onShow() {
+    if (this.hasShown) this.loadActiveTab()
+    this.hasShown = true
     if (!this.pollTimer) {
       this.pollTimer = setInterval(this.refreshConversations, REFRESH_INTERVAL)
     }
@@ -155,6 +159,7 @@ export default {
     this.loadActiveTab().finally(() => uni.stopPullDownRefresh())
   },
   methods: {
+    resolveImageUrl,
     stopPolling() {
       if (this.pollTimer) {
         clearInterval(this.pollTimer)

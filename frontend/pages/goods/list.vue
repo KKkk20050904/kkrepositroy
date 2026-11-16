@@ -36,7 +36,10 @@
         <image class="goods-img" :src="item.cover" mode="aspectFill" />
         <view class="goods-info">
           <text class="goods-title">{{ item.title }}</text>
-          <text class="goods-price">¥{{ item.price }}</text>
+          <view class="price-row">
+            <text class="goods-price">¥{{ item.price }}</text>
+            <text v-if="canChat(item)" class="chat-mini" @click.stop="contactSeller(item)">✉ 私聊</text>
+          </view>
           <view class="goods-meta">
             <text class="seller">{{ item.seller_name }}</text>
             <text class="time">{{ formatTime(item.create_time) }}</text>
@@ -55,6 +58,9 @@
 </template>
 
 <script>
+import { getUser } from '../../common/request.js'
+import { buildChatUrl } from '../../common/chat.js'
+
 export default {
   data() {
     return {
@@ -62,6 +68,7 @@ export default {
       // HBuilderX 内置浏览器/微信开发者工具模拟器可直接用 localhost；
       // 真机调试时改成电脑的局域网 IP，例如 http://192.168.1.100:3000
       baseUrl: 'http://localhost:3000',
+      currentUserId: 0,
 
       keyword: '',
       categoryId: 0,     // 0 = 全部
@@ -87,6 +94,8 @@ export default {
 
   // 页面加载时请求分类和第一页商品
   onLoad() {
+    const user = getUser()
+    this.currentUserId = Number(user && user.id) || 0
     this.getCategories()
     this.loadGoods()
   },
@@ -168,6 +177,34 @@ export default {
     // 跳转商品详情（赵六负责：pages/goods-detail/goods-detail）
     goDetail(id) {
       uni.navigateTo({ url: `/pages/goods-detail/goods-detail?id=${id}` })
+    },
+
+    canChat(item) {
+      return Boolean(item.seller_id) && Number(item.seller_id) !== this.currentUserId
+    },
+
+    contactSeller(item) {
+      if (!this.canChat(item)) {
+        uni.showToast({ title: item.seller_id ? '不能和自己聊天哦' : '该商品暂不支持私信', icon: 'none' })
+        return
+      }
+      if (!uni.getStorageSync('token')) {
+        uni.showToast({ title: '请先登录后再联系卖家', icon: 'none' })
+        setTimeout(() => uni.navigateTo({ url: '/pages/login/login' }), 400)
+        return
+      }
+      const url = buildChatUrl({
+        peerId: item.seller_id,
+        name: item.seller_name,
+        avatar: item.seller_avatar || '',
+        goods: {
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          image: item.cover
+        }
+      })
+      uni.navigateTo({ url })
     },
 
     // 时间格式化成 yyyy-MM-dd
@@ -264,10 +301,26 @@ export default {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8rpx;
+}
 .goods-price {
   font-size: 34rpx;
   color: #ff4d2e;
   font-weight: bold;
+}
+.chat-mini {
+  flex: none;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  color: #d6332e;
+  background: #fff0ed;
+  font-size: 20rpx;
+  line-height: 1.5;
+  white-space: nowrap;
 }
 .goods-meta {
   display: flex;

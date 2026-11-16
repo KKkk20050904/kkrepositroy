@@ -78,7 +78,7 @@ router.get('/goods', async (req, res, next) => {
       `SELECT g.id, g.title, g.price, g.original_price, g.category_id, g.status,
               g.created_at AS create_time,
               (SELECT image_url FROM goods_images WHERE goods_id = g.id ORDER BY sort_order ASC, id ASC LIMIT 1) AS cover,
-              u.nickname AS seller_name
+              g.user_id AS seller_id, u.nickname AS seller_name, u.avatar AS seller_avatar
        FROM goods g
        LEFT JOIN users u ON u.id = g.user_id
        ${whereSql}

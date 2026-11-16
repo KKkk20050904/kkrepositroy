@@ -17,26 +17,39 @@
       <view class="price">¥{{ detail.price }}</view>
       <view class="title">{{ detail.title }}</view>
       <view class="desc">{{ detail.description || '暂无描述' }}</view>
-      <view class="publisher">发布人：{{ detail.nickname || '未知用户' }}</view>
     </view>
 
-    <button class="collect-btn" @click="toggleCollect">
-      {{ detail.isCollect ? '已收藏（点击取消）' : '☆☆ 收藏这件商品' }}
-    </button>
+    <view class="seller-card" :class="{ clickable: detail.user_id && !isOwner }" @click="openSeller">
+      <image v-if="detail.avatar" class="seller-avatar" :src="detail.avatar" mode="aspectFill"></image>
+      <view v-else class="seller-avatar seller-avatar-placeholder">{{ (detail.nickname || '卖').slice(0, 1) }}</view>
+      <view class="seller-info">
+        <view class="seller-name-row">
+          <text class="seller-name">{{ detail.nickname || '校园卖家' }}</text>
+          <text v-if="isOwner" class="owner-badge">我发布的</text>
+        </view>
+        <text class="seller-caption">{{ sellerCaption }}</text>
+      </view>
+      <text v-if="detail.user_id && !isOwner" class="seller-arrow">›</text>
+    </view>
 
-    <!-- 仅发布者本人可见：删除商品 -->
-    <button v-if="canDelete" class="delete-btn" @click="deleteGoods">🗑 删除这件商品</button>
+    <view class="bottom-actions">
+      <button class="collect-btn" @click="toggleCollect">
+        {{ detail.isCollect ? '已收藏（点击取消）' : '☆☆ 收藏这件商品' }}
+      </button>
+      <button v-if="detail.user_id && !isOwner" class="chat-btn" @click="goChat">💬 联系卖家</button>
+    </view>
   </view>
 </template>
 
 <script>
-import { request } from '../../common/request.js';
-import { getCurrentUser } from '../../common/accounts.js';
+import { request, getUser } from '../../common/request.js';
+import { buildChatUrl } from '../../common/chat.js';
 
 export default {
   data() {
     return {
       goodsId: null,
+      currentUserId: 0,
       detail: { isCollect: false }
     };
   },
@@ -47,15 +60,19 @@ export default {
       if (Array.isArray(imgs) && imgs.length > 0) return imgs;
       return this.detail && this.detail.image ? [this.detail.image] : [];
     },
-    // 当前登录用户是否为该商品的发布者（是则可删除）
-    canDelete() {
-      const user = getCurrentUser();
-      if (!user || !this.detail) return false;
-      return Number(user.id) === Number(this.detail.user_id);
+    isOwner() {
+      return Boolean(this.detail && this.detail.user_id &&
+        Number(this.detail.user_id) === this.currentUserId);
+    },
+    sellerCaption() {
+      if (!this.detail || !this.detail.user_id) return '平台商品 · 暂不支持私信';
+      return this.isOwner ? '这是你发布的商品' : '校园卖家 · 可私信咨询';
     }
   },
   onLoad(options) {
     this.goodsId = options.id;
+    const user = getUser();
+    this.currentUserId = Number(user && user.id) || 0;
     this.getDetail();
   },
   methods: {
@@ -74,32 +91,6 @@ export default {
       uni.previewImage({
         urls: this.galleryImages,
         current: this.galleryImages[index]
-      });
-    },
-    // 删除商品（仅发布者本人；二次确认后调用后端）
-    deleteGoods() {
-      uni.showModal({
-        title: '删除商品',
-        content: '确定删除这件商品吗？删除后不可恢复。',
-        confirmText: '删除',
-        confirmColor: '#e64340',
-        success: (r) => {
-          if (!r.confirm) return;
-          uni.showLoading({ title: '删除中', mask: true });
-          request({ url: `/api/goods/${this.goodsId}`, method: 'DELETE' })
-            .then(() => {
-              uni.hideLoading();
-              uni.showToast({ title: '已删除', icon: 'success' });
-              setTimeout(() => {
-                // 返回列表页并刷新（reLaunch 保证列表拿到最新数据）
-                uni.reLaunch({ url: '/pages/goods/list' });
-              }, 700);
-            })
-            .catch((e) => {
-              uni.hideLoading();
-              uni.showToast({ title: (e && e.message) || '删除失败', icon: 'none' });
-            });
-        }
       });
     },
     // 收藏 / 取消收藏（需登录）
@@ -123,6 +114,37 @@ export default {
       } catch (e) {
         uni.showToast({ title: (e && e.message) || '操作失败', icon: 'none' });
       }
+    },
+    openSeller() {
+      if (!this.detail.user_id || this.isOwner) return;
+      this.goChat();
+    },
+    goChat() {
+      if (!this.detail.user_id) {
+        uni.showToast({ title: '该商品暂不支持联系卖家', icon: 'none' });
+        return;
+      }
+      if (this.isOwner) {
+        uni.showToast({ title: '不能和自己聊天哦', icon: 'none' });
+        return;
+      }
+      if (!uni.getStorageSync('token')) {
+        uni.showToast({ title: '请先登录后再联系卖家', icon: 'none' });
+        setTimeout(() => uni.navigateTo({ url: '/pages/login/login' }), 400);
+        return;
+      }
+      const url = buildChatUrl({
+        peerId: this.detail.user_id,
+        name: this.detail.nickname || '卖家',
+        avatar: this.detail.avatar || '',
+        goods: {
+          id: this.detail.id,
+          title: this.detail.title,
+          price: this.detail.price,
+          image: this.detail.image
+        }
+      });
+      uni.navigateTo({ url });
     }
   }
 };
@@ -151,46 +173,114 @@ export default {
   color: #999;
   font-size: 26rpx;
 }
+.info {
+  margin-top: 20rpx;
+  padding: 24rpx;
+  border-radius: 12rpx;
+  background: #fff;
+}
 .price {
   font-size: 40rpx;
   color: #ff4d4f;
   font-weight: bold;
-  margin: 20rpx 0;
+  margin-bottom: 20rpx;
 }
 .title {
   font-size: 32rpx;
   color: #222;
 }
 .desc {
-  margin: 20rpx 0;
+  margin-top: 20rpx;
   font-size: 28rpx;
   color: #666;
   line-height: 1.6;
 }
-.publisher {
-  font-size: 26rpx;
-  color: #888;
+.seller-card {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  border-radius: 12rpx;
+  background: #fff;
 }
-.collect-btn {
+.seller-card.clickable:active {
+  background: #f8fbff;
+}
+.seller-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  flex: none;
+  border-radius: 50%;
+  background: #eef4ff;
+}
+.seller-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2b85e4;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+.seller-info {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+.seller-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+.seller-name {
+  font-size: 28rpx;
+  color: #222;
+  font-weight: 600;
+}
+.owner-badge {
+  padding: 2rpx 10rpx;
+  border-radius: 20rpx;
+  color: #b07a3a;
+  background: #fff4e5;
+  font-size: 20rpx;
+}
+.seller-caption {
+  color: #999;
+  font-size: 24rpx;
+}
+.seller-arrow {
+  flex: none;
+  color: #bbb;
+  font-size: 40rpx;
+  line-height: 1;
+}
+.bottom-actions {
   margin-top: 40rpx;
-  background: #2b85e4;
+  display: flex;
+  gap: 16rpx;
+}
+.collect-btn,
+.chat-btn {
+  flex: 1;
+  margin: 0;
+  padding: 20rpx;
+  border-radius: 12rpx;
   color: #fff;
   text-align: center;
-  padding: 20rpx;
-  border-radius: 12rpx;
   font-size: 30rpx;
+  line-height: 1.8;
 }
-.delete-btn {
-  margin-top: 24rpx;
-  background: #fff;
-  color: #e64340;
-  border: 2rpx solid #f3c0be;
-  text-align: center;
-  padding: 20rpx;
-  border-radius: 12rpx;
-  font-size: 30rpx;
+.collect-btn {
+  background: #2b85e4;
 }
-.delete-btn::after {
+.chat-btn {
+  background: linear-gradient(90deg, #ff7a45, #ff4d4f);
+  font-weight: 600;
+}
+.collect-btn::after,
+.chat-btn::after {
   border: none;
 }
 </style>
